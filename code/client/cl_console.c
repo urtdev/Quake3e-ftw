@@ -324,6 +324,7 @@ void Con_CheckResize(console_t* console)
 		width = DEFAULT_CONSOLE_WIDTH;
 		console->linewidth = width;
 		console->totallines = CON_TEXTSIZE / console->linewidth;
+		console->vispage = 4;
 		for (i = 0; i < CON_TEXTSIZE; i++)
 			console->text[i] = (ColorIndex(COLOR_WHITE) << 8) | ' ';
 	}
@@ -495,7 +496,6 @@ void Con_NewLine( console_t* console, qboolean skipnotify )
 			console->times[console->current % NUM_CON_TIMES] = cls.realtime;
 	}
 
-	console->x = 0;
 	if (console->display == console->current)
 		console->display++;
 	console->current++;
@@ -624,7 +624,7 @@ All console printing must go through this in order to be logged to disk
 If no console is visible, the text will appear at the top of the game window
 ================
 */
-void CL_ConsolePrint( const char *txt ) {
+void CL_ConsolePrint( char *txt ) {
 	int     i;
 
 	qboolean isKill = qfalse;
@@ -710,10 +710,10 @@ void Con_DrawInput( void ) {
 
 	re.SetColor(currentCon->color );
 
-	SCR_DrawSmallChar(currentCon->xadjust + 1 * (smallchar_width - 1), y, ']' );
+	SCR_DrawSmallChar(currentCon->xadjust + 1 * smallchar_width, y, ']' );
 
-	Field_Draw( &g_consoleField, currentCon->xadjust + 2 * (smallchar_width - 1), y,
-		SCREEN_WIDTH - 3 * (smallchar_width - 1), qtrue, qtrue );
+	Field_Draw( &g_consoleField, currentCon->xadjust + 2 * smallchar_width, y,
+		SCREEN_WIDTH - 3 * smallchar_width, qtrue, qtrue );
 }
 
 
@@ -918,9 +918,9 @@ void Con_DrawSolidConsole( float frac ) {
 
 	// draw the text
 	currentCon->vislines = lines;
-	rows = lines / smallchar_width - 1;		// rows of text to draw
+	rows = lines / smallchar_width - 1;	    // rows of text to draw
 
-	y = lines - (smallchar_height * 2);
+	y = lines - (smallchar_height * 3);
 
 	// draw from the bottom up
 	if (currentCon->display != currentCon->current)
@@ -934,10 +934,6 @@ void Con_DrawSolidConsole( float frac ) {
 	}
 
 	row = currentCon->display;
-
-	if (currentCon->x == 0) {
-		row--;
-	}
 
 	currentColor = 7;
 	re.SetColor(g_color_table[currentColor]);
@@ -962,7 +958,7 @@ void Con_DrawSolidConsole( float frac ) {
 				currentColor = (text[x] >> 8) % 10;
 				re.SetColor(g_color_table[currentColor]);
 			}
-			SCR_DrawSmallChar(currentCon->xadjust + (x + 1) * (smallchar_width - 1), y - (2 * smallchar_height), text[x] & 0xff);
+			SCR_DrawSmallChar(currentCon->xadjust + (x + 1) * (smallchar_width - 1), y, text[x] & 0xff);
 		}
 	}
 
