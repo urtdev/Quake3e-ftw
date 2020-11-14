@@ -351,6 +351,10 @@ ifdef MINGW
 
   CLIENT_LDFLAGS=$(LDFLAGS)
 
+  ifeq ($(USE_AUTH),1)
+      BASE_CFLAGS += -DUSE_AUTH
+  endif
+
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
     #CLIENT_CFLAGS += -DUSE_LOCAL_HEADERS=1
