@@ -263,6 +263,12 @@ no client connection is active at all
 ==================================================================
 */
 
+typedef enum {
+	ITEM_TEXTSTYLE_NORMAL,
+	ITEM_TEXTSTYLE_SHADOWED,
+	ITEM_TEXTSTYLE_SHADOWEDLESS
+} textStyle_t;
+
 typedef struct {
 	netadr_t	adr;
 	int			start;
@@ -284,12 +290,14 @@ typedef struct {
 	int			ping;
 	qboolean	visible;
 	int			punkbuster;
+    int			auth; //@Barbatos: auth system
 	int			g_humanplayers;
 	int			g_needpass;
 } serverInfo_t;
 
 typedef struct {
 	connstate_t	state;				// connection status
+	int			keyCatchers;		// bit flags
 	qboolean	gameSwitch;
 
 	qboolean	cddialog;			// bring up the cd needed dialog next frame
@@ -335,6 +343,9 @@ typedef struct {
 	qhandle_t	charSetShader;
 	qhandle_t	whiteShader;
 	qhandle_t	consoleShader;
+
+	fontInfo_t  font;
+	qboolean    fontFont;
 
 	int			lastVidRestart;
 	int			soundMuted;
@@ -408,6 +419,13 @@ extern	cvar_t	*cl_inGameVideo;
 
 extern	cvar_t	*cl_lanForcePackets;
 extern	cvar_t	*cl_autoRecordDemo;
+
+#ifdef USE_AUTH
+extern  cvar_t	*cl_auth_engine;
+extern  cvar_t  *cl_auth;
+extern  cvar_t  *authc;
+extern  cvar_t  *authl; // Auth Login
+#endif
 
 extern	cvar_t	*com_maxfps;
 
@@ -550,6 +568,9 @@ void CIN_DrawCinematic (int handle);
 void CIN_SetExtents (int handle, int x, int y, int w, int h);
 void CIN_UploadCinematic(int handle);
 void CIN_CloseAllVideos(void);
+
+int     SCR_FontWidth(const char* text, float scale);
+void    SCR_DrawFontText(float x, float y, float scale, vec4_t color, const char* text, int style);
 
 //
 // cl_cgame.c

@@ -66,6 +66,13 @@ cvar_t	*cl_lanForcePackets;
 
 cvar_t	*cl_guidServerUniq;
 
+#ifdef USE_AUTH
+cvar_t  *cl_auth_engine;
+cvar_t  *cl_auth;
+cvar_t  *authc;
+cvar_t  *authl;
+#endif
+
 cvar_t	*cl_dlURL;
 cvar_t	*cl_dlDirectory;
 
@@ -226,6 +233,11 @@ static void CL_WriteDemoMessage( msg_t *msg, int headerBytes ) {
 	swlen = LittleLong(len);
 	FS_Write( &swlen, 4, clc.recordfile );
 	FS_Write( msg->data + headerBytes, len, clc.recordfile );
+
+    #ifdef USE_DEMO_FORMAT_42
+    // add size of packet in the end for backward play /* holblin */
+		FS_Write (&swlen, 4, clc.recordfile);
+    #endif
 }
 
 
@@ -2405,6 +2417,7 @@ static void CL_InitServerInfo( serverInfo_t *server, const netadr_t *address ) {
 	server->game[0] = '\0';
 	server->gameType = 0;
 	server->netType = 0;
+	server->auth = 0;
 	server->punkbuster = 0;
 	server->g_humanplayers = 0;
 	server->g_needpass = 0;
@@ -2798,6 +2811,14 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		return qfalse;
 	}
 
+	#ifdef USE_AUTH
+	//@Barbatos @Kalish
+	if (strstr(c, "AUTH:CL")) {
+		VM_Call(uivm, 1, UI_AUTHSERVER_PACKET, from);
+		return qfalse;
+	}
+	#endif
+
 	Com_DPrintf( "Unknown connectionless packet command.\n" );
 	return qfalse;
 }
@@ -3179,6 +3200,11 @@ static void CL_InitRenderer( void ) {
 	cls.consoleShader = re.RegisterShader( "console" );
 	g_console_field_width = cls.glconfig.vidWidth / smallchar_width - 2;
 	g_consoleField.widthInChars = g_console_field_width;
+
+	if (FS_ReadFile("fonts/fontImage_20.dat", NULL) > 0) {
+		re.RegisterFont("fonts/fontImage_20.dat", 20, &cls.font);
+		cls.fontFont = qtrue;
+	}
 
 	// for 640x480 virtualized screen
 	cls.biasY = 0;
@@ -3804,7 +3830,7 @@ void CL_Init( void ) {
 
 	cl_autoNudge = Cvar_Get( "cl_autoNudge", "0", CVAR_TEMP );
 	Cvar_CheckRange( cl_autoNudge, "0", "1", CV_FLOAT );
-	cl_timeNudge = Cvar_Get( "cl_timeNudge", "0", CVAR_TEMP );
+	cl_timeNudge = Cvar_Get( "cl_timeNudge", "0", CVAR_PROTECTED );
 	Cvar_CheckRange( cl_timeNudge, "-30", "30", CV_INTEGER );
 
 	cl_shownet = Cvar_Get ("cl_shownet", "0", CVAR_TEMP );
@@ -3859,7 +3885,7 @@ void CL_Init( void ) {
 
 	cl_guidServerUniq = Cvar_Get( "cl_guidServerUniq", "1", CVAR_ARCHIVE_ND );
 
-	cl_dlURL = Cvar_Get( "cl_dlURL", "http://ws.q3df.org/getpk3bymapname.php/%1", CVAR_ARCHIVE_ND );
+	cl_dlURL = Cvar_Get( "cl_dlURL", "http://urt.li/q3ut4", CVAR_ARCHIVE_ND );
 	
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
@@ -3868,31 +3894,23 @@ void CL_Init( void ) {
 		" 1 - fs_basegame (%s) directory\n", FS_GetBaseGameDir() );
 	Cvar_SetDescription( cl_dlDirectory, s );
 
+    #ifdef USE_AUTH
+    //@Barbatos
+	cl_auth_engine = Cvar_Get( "cl_auth_engine", "1", CVAR_TEMP | CVAR_ROM);
+	cl_auth = Cvar_Get("cl_auth", "0", CVAR_TEMP | CVAR_ROM);
+	authc = Cvar_Get("authc", "0", CVAR_TEMP | CVAR_USERINFO);
+	authl = Cvar_Get("authl", "", CVAR_TEMP | CVAR_USERINFO);
+    #endif
+
 	// userinfo
-	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("snaps", "40", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
- 	Cvar_Get ("team_model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("team_headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-//	Cvar_Get ("g_redTeam", "Stroggs", CVAR_SERVERINFO | CVAR_ARCHIVE);
-//	Cvar_Get ("g_blueTeam", "Pagans", CVAR_SERVERINFO | CVAR_ARCHIVE);
-	Cvar_Get ("color1", "4", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("color2", "5", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-//	Cvar_Get ("teamtask", "0", CVAR_USERINFO );
-	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO | CVAR_ARCHIVE_ND );
-
-	Cvar_Get ("password", "", CVAR_USERINFO);
-	Cvar_Get ("cg_predictItems", "1", CVAR_USERINFO | CVAR_ARCHIVE );
-
-
-	// cgame might not be initialized before menu is used
-	Cvar_Get ("cg_viewsize", "100", CVAR_ARCHIVE_ND );
-	// Make sure cg_stereoSeparation is zero as that variable is deprecated and should not be used anymore.
-	Cvar_Get ("cg_stereoSeparation", "0", CVAR_ROM);
+    Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
+    Cvar_Get ("rate", "32000", CVAR_USERINFO | CVAR_ARCHIVE );
+    Cvar_Get ("snaps", "20", CVAR_USERINFO | CVAR_PROTECTED );
+    Cvar_Get ("color1",  "4", CVAR_USERINFO | CVAR_ARCHIVE );
+    Cvar_Get ("color2", "5", CVAR_USERINFO | CVAR_ARCHIVE );
+    Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE );
+    Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
+    Cvar_Get ("password", "", CVAR_USERINFO);
 
 	//
 	// register client commands
@@ -4042,6 +4060,7 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 			server->minPing = atoi(Info_ValueForKey(info, "minping"));
 			server->maxPing = atoi(Info_ValueForKey(info, "maxping"));
 			server->punkbuster = atoi(Info_ValueForKey(info, "punkbuster"));
+            server->auth = atoi(Info_ValueForKey(info, "auth"));
 			server->g_humanplayers = atoi(Info_ValueForKey(info, "g_humanplayers"));
 			server->g_needpass = atoi(Info_ValueForKey(info, "g_needpass"));
 		}

@@ -728,8 +728,8 @@ void SV_Init( void )
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
-	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP );
-	Cvar_CheckRange( sv_fps, "10", "125", CV_INTEGER );
+	sv_fps = Cvar_Get ("sv_fps", "120", CVAR_PROTECTED );
+	//Cvar_CheckRange( sv_fps, "20", "125", CV_INTEGER );
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );
 	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
 	Cvar_SetDescription( sv_timeout, "Seconds without any message before automatic client disconnect" );
@@ -741,9 +741,11 @@ void SV_Init( void )
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
 	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
 
-	sv_master[0] = Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT );
-	sv_master[1] = Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_INIT );
-	sv_master[2] = Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_INIT );
+    sv_master[0] = Cvar_Get ("sv_master1", MASTER_SERVER_NAME, 0 );
+    sv_master[1] = Cvar_Get ("sv_master2", MASTER2_SERVER_NAME, CVAR_ARCHIVE );
+    sv_master[2] = Cvar_Get ("sv_master3", MASTER3_SERVER_NAME, CVAR_ARCHIVE );
+    sv_master[3] = Cvar_Get ("sv_master4", "", CVAR_ARCHIVE );
+    sv_master[4] = Cvar_Get ("sv_master5", "", CVAR_ARCHIVE );
 
 	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[index] = Cvar_Get(va("sv_master%d", index + 1), "", CVAR_ARCHIVE);
@@ -755,6 +757,12 @@ void SV_Init( void )
 	sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
 	sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
 	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
+    sv_strictAuth = Cvar_Get ("sv_strictAuth", "1", CVAR_ARCHIVE );
+
+#ifdef USE_AUTH
+    sv_authServerIP = Cvar_Get("sv_authServerIP", "", CVAR_TEMP | CVAR_ROM);
+	sv_auth_engine = Cvar_Get("sv_auth_engine", "1", CVAR_ROM);
+#endif
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
