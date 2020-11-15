@@ -36,6 +36,24 @@ cvar_t	*sv_maxclients;
 cvar_t	*sv_maxclientsPerIP;
 cvar_t	*sv_clientTLD;
 
+#ifdef USE_MV
+fileHandle_t	sv_demoFile = FS_INVALID_HANDLE;
+char	sv_demoFileName[ MAX_OSPATH ];
+char	sv_demoFileNameLast[ MAX_OSPATH ];
+int		sv_demoClientID; // current client
+int		sv_lastAck;
+int		sv_lastClientSeq;
+
+cvar_t	*sv_mvClients;
+cvar_t	*sv_mvPassword;
+cvar_t	*sv_demoFlags;
+cvar_t	*sv_autoRecord;
+
+cvar_t	*sv_mvFileCount;
+cvar_t	*sv_mvFolderSize;
+#endif
+
+
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];		// master server ip address
@@ -48,6 +66,8 @@ cvar_t	*sv_referencedPakNames;
 cvar_t	*sv_serverid;
 cvar_t	*sv_minRate;
 cvar_t	*sv_maxRate;
+cvar_t  *sv_minPing;
+cvar_t  *sv_maxPing;
 cvar_t	*sv_dlRate;
 cvar_t	*sv_gametype;
 cvar_t	*sv_pure;
@@ -738,7 +758,7 @@ if a user is interested in a server to do a full status
 ================
 */
 static void SVC_Info( const netadr_t *from ) {
-	int		i, count, humans;
+	int		i, count, humans, bots;
 	const char	*gamedir;
 	char	infostring[MAX_INFO_STRING];
 
@@ -775,12 +795,15 @@ static void SVC_Info( const netadr_t *from ) {
 		return;
 
 	// don't count privateclients
-	count = humans = 0;
+	count = humans = bots = 0;
 	for ( i = sv_privateClients->integer ; i < sv_maxclients->integer ; i++ ) {
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
 			count++;
 			if (svs.clients[i].netchan.remoteAddress.type != NA_BOT) {
 				humans++;
+			}
+			else {
+				bots++;
 			}
 		}
 	}
@@ -795,6 +818,7 @@ static void SVC_Info( const netadr_t *from ) {
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 	Info_SetValueForKey( infostring, "mapname", sv_mapname->string );
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );
+	Info_SetValueForKey( infostring, "bots", va("%i", bots) );
 	Info_SetValueForKey(infostring, "g_humanplayers", va("%i", humans));
 	Info_SetValueForKey( infostring, "sv_maxclients", 
 		va("%i", sv_maxclients->integer - sv_privateClients->integer ) );
@@ -808,9 +832,22 @@ static void SVC_Info( const netadr_t *from ) {
 
 	#ifdef USE_AUTH
 	Info_SetValueForKey(infostring, "auth", Cvar_VariableString("auth"));
-	#endif
+    #endif
 
-	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
+    //@Barbatos: if it's a passworded server, let the client know (for the server browser)
+    if(Cvar_VariableValue("g_needpass") == 1)
+        Info_SetValueForKey( infostring, "password", va("%i", 1));
+
+    if( sv_minPing->integer ) {
+        Info_SetValueForKey( infostring, "minPing", va("%i", sv_minPing->integer) );
+    }
+    if( sv_maxPing->integer ) {
+        Info_SetValueForKey( infostring, "maxPing", va("%i", sv_maxPing->integer) );
+    }
+
+    Info_SetValueForKey(infostring, "modversion", Cvar_VariableString("g_modversion"));
+
+    NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
 }
 
 
@@ -1393,6 +1430,22 @@ void SV_Frame( int msec ) {
 		}
 	}
 
+#ifdef USE_MV
+    if ( svs.nextSnapshotPSF > svs.modSnapshotPSF + svs.numSnapshotPSF ) {
+        svs.nextSnapshotPSF -= svs.modSnapshotPSF;
+        if ( svs.clients ) {
+            for ( i = 0; i < sv_maxclients->integer; i++ ) {
+                if ( svs.clients[ i ].state < CS_CONNECTED )
+                    continue;
+                for ( n = 0; n < PACKET_BACKUP; n++ ) {
+                    if ( svs.clients[ i ].frames[ n ].first_psf > svs.modSnapshotPSF )
+                        svs.clients[ i ].frames[ n ].first_psf -= svs.modSnapshotPSF;
+                }
+            }
+        }
+    }
+#endif
+
 	if ( sv.restartTime && sv.time >= sv.restartTime ) {
 		sv.restartTime = 0;
 		Cbuf_AddText( "map_restart 0\n" );
@@ -1420,6 +1473,10 @@ void SV_Frame( int msec ) {
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
 
+#ifdef USE_MV
+    svs.emptyFrame = qtrue;
+#endif
+
 	// run the game simulation in chunks
 	while ( sv.timeResidual >= frameMsec ) {
 		sv.timeResidual -= frameMsec;
@@ -1428,6 +1485,9 @@ void SV_Frame( int msec ) {
 
 		// let everything in the world think and move
 		VM_Call( gvm, 1, GAME_RUN_FRAME, sv.time );
+#ifdef USE_MV
+		svs.emptyFrame = qfalse; // ok, run recorder
+#endif
 	}
 
 	if ( com_speeds->integer ) {
@@ -1442,6 +1502,17 @@ void SV_Frame( int msec ) {
 
 	// send messages back to the clients
 	SV_SendClientMessages();
+
+#ifdef USE_MV
+    svs.emptyFrame = qfalse;
+    if ( sv_autoRecord->integer > 0 ) {
+        if ( sv_demoFile == FS_INVALID_HANDLE ) {
+            if ( SV_FindActiveClient( qtrue, -1, sv_autoRecord->integer ) >= 0 ) {
+                Cbuf_AddText( "mvrecord\n" );
+            }
+        }
+    }
+#endif
 
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat(HEARTBEAT_FOR_MASTER);

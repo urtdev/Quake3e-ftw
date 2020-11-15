@@ -369,7 +369,7 @@ void Com_AppendCDKey( const char *filename );
 void Com_ReadCDKey( const char *filename );
 
 static int FS_GetModList( char *listbuf, int bufsize );
-static void FS_CheckIdPaks( void );
+//static void FS_CheckIdPaks( void );
 void FS_Reload( void );
 
 
@@ -1782,6 +1782,61 @@ int FS_Home_FOpenFileRead( const char *filename, fileHandle_t *file )
 	return -1;
 }
 
+/*
+=================
+FS_Home_ListFilteredFiles
+=================
+*/
+char **FS_Home_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles ) {
+
+    const char *netpath;
+
+    if ( !fs_searchpaths ) {
+        Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+    }
+
+    if ( !path ) {
+        *numfiles = 0;
+        return NULL;
+    }
+
+    if ( !extension ) {
+        extension = "";
+    }
+
+    netpath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, path );
+
+    return Sys_ListFiles( netpath, extension, filter, numfiles, qfalse );
+}
+
+
+/*
+=================
+FS_Home_FileSize
+=================
+*/
+int FS_Home_FileSize( const char *name ) {
+
+    const char *ospath;
+    int length;
+    FILE *f;
+
+    if ( !fs_searchpaths ) {
+        Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+    }
+
+    ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, name );
+
+    f = Sys_FOpen( ospath, "rb" );
+    if ( f ) {
+        length = FS_FileLength( f );
+        fclose( f );
+    } else {
+        length = -1;
+    }
+
+    return length;
+}
 
 /*
 =================
@@ -4753,8 +4808,8 @@ static void FS_Startup( void ) {
 	fs_gamedirvar->modified = qfalse; // We just loaded, it's not modified
 
 	// check original q3a files
-	if ( !Q_stricmp( fs_basegame->string, BASEGAME ) || !Q_stricmp( fs_basegame->string, BASEDEMO ) )
-		FS_CheckIdPaks();
+//	if ( !Q_stricmp( fs_basegame->string, BASEGAME ) || !Q_stricmp( fs_basegame->string, BASEDEMO ) )
+//		FS_CheckIdPaks();
 
 #ifdef FS_MISSING
 	if (missingFiles == NULL) {
@@ -4780,97 +4835,97 @@ Note: If you're building a game that doesn't depend on the
 Q3 media pak0.pk3, you'll want to remove this function
 ===================
 */
-static void FS_CheckIdPaks( void )
-{
-	searchpath_t	*path;
-	qboolean founddemo = qfalse;
-	unsigned foundPak = 0;
-
-	for( path = fs_searchpaths; path; path = path->next )
-	{
-		const char* pakBasename;
-
-		if ( !path->pack )
-			continue;
-
-		pakBasename = path->pack->pakBasename;
-
-		if(!Q_stricmpn( path->pack->pakGamename, BASEDEMO, MAX_OSPATH )
-		   && !Q_stricmpn( pakBasename, "pak0", MAX_OSPATH ))
-		{
-			founddemo = qtrue;
-
-			if( path->pack->checksum == DEMO_PAK0_CHECKSUM )
-			{
-				Com_Printf( "\n\n"
-						"**************************************************\n"
-						"WARNING: It looks like you're using pak0.pk3\n"
-						"from the demo. This may work fine, but it is not\n"
-						"guaranteed or supported.\n"
-						"**************************************************\n\n\n" );
-			}
-		}
-
-		else if(!Q_stricmpn( path->pack->pakGamename, BASEGAME, MAX_OSPATH )
-			&& strlen(pakBasename) == 4 && !Q_stricmpn( pakBasename, "pak", 3 )
-			&& pakBasename[3] >= '0' && pakBasename[3] <= '8')
-		{
-			if( (unsigned int)path->pack->checksum != pak_checksums[pakBasename[3]-'0'] )
-			{
-				if(pakBasename[3] == '0')
-				{
-					Com_Printf("\n\n"
-						"**************************************************\n"
-						"ERROR: pak0.pk3 is present but its checksum (%u)\n"
-						"is not correct. Please re-copy pak0.pk3 from your\n"
-						"legitimate Q3 CDROM.\n"
-						"**************************************************\n\n\n",
-						path->pack->checksum );
-				}
-				else
-				{
-					Com_Printf("\n\n"
-						"**************************************************\n"
-						"ERROR: pak%d.pk3 is present but its checksum (%u)\n"
-						"is not correct. Please re-install Quake 3 Arena \n"
-						"Point Release v1.32 pk3 files\n"
-						"**************************************************\n\n\n",
-						pakBasename[3]-'0', path->pack->checksum );
-				}
-				Com_Error(ERR_FATAL, "\n* You need to install correct Quake III Arena files in order to play *");
-			}
-
-			foundPak |= 1<<(pakBasename[3]-'0');
-		}
-	}
-
-	if(!founddemo && (foundPak & 0x1ff) != 0x1ff )
-	{
-		if((foundPak&1) != 1 )
-		{
-			Com_Printf("\n\n"
-			"pak0.pk3 is missing. Please copy it\n"
-			"from your legitimate Q3 CDROM.\n");
-		}
-
-		if((foundPak&0x1fe) != 0x1fe )
-		{
-			Com_Printf("\n\n"
-			"Point Release files are missing. Please\n"
-			"re-install the 1.32 point release.\n");
-		}
-
-		Com_Printf("\n\n"
-			"Also check that your Q3 executable is in\n"
-			"the correct place and that every file\n"
-			"in the %s directory is present and readable.\n", BASEGAME);
-
-		if(!fs_gamedirvar->string[0]
-		|| !Q_stricmp( fs_gamedirvar->string, BASEGAME )
-		|| !Q_stricmp( fs_gamedirvar->string, BASETA ))
-			Com_Error(ERR_FATAL, "\n*** you need to install Quake III Arena in order to play ***");
-	}
-}
+//static void FS_CheckIdPaks( void )
+//{
+//	searchpath_t	*path;
+//	qboolean founddemo = qfalse;
+//	unsigned foundPak = 0;
+//
+//	for( path = fs_searchpaths; path; path = path->next )
+//	{
+//		const char* pakBasename;
+//
+//		if ( !path->pack )
+//			continue;
+//
+//		pakBasename = path->pack->pakBasename;
+//
+//		if(!Q_stricmpn( path->pack->pakGamename, BASEDEMO, MAX_OSPATH )
+//		   && !Q_stricmpn( pakBasename, "pak0", MAX_OSPATH ))
+//		{
+//			founddemo = qtrue;
+//
+//			if( path->pack->checksum == DEMO_PAK0_CHECKSUM )
+//			{
+//				Com_Printf( "\n\n"
+//						"**************************************************\n"
+//						"WARNING: It looks like you're using pak0.pk3\n"
+//						"from the demo. This may work fine, but it is not\n"
+//						"guaranteed or supported.\n"
+//						"**************************************************\n\n\n" );
+//			}
+//		}
+//
+//		else if(!Q_stricmpn( path->pack->pakGamename, BASEGAME, MAX_OSPATH )
+//			&& strlen(pakBasename) == 4 && !Q_stricmpn( pakBasename, "pak", 3 )
+//			&& pakBasename[3] >= '0' && pakBasename[3] <= '8')
+//		{
+//			if( (unsigned int)path->pack->checksum != pak_checksums[pakBasename[3]-'0'] )
+//			{
+//				if(pakBasename[3] == '0')
+//				{
+//					Com_Printf("\n\n"
+//						"**************************************************\n"
+//						"ERROR: pak0.pk3 is present but its checksum (%u)\n"
+//						"is not correct. Please re-copy pak0.pk3 from your\n"
+//						"legitimate Q3 CDROM.\n"
+//						"**************************************************\n\n\n",
+//						path->pack->checksum );
+//				}
+//				else
+//				{
+//					Com_Printf("\n\n"
+//						"**************************************************\n"
+//						"ERROR: pak%d.pk3 is present but its checksum (%u)\n"
+//						"is not correct. Please re-install Quake 3 Arena \n"
+//						"Point Release v1.32 pk3 files\n"
+//						"**************************************************\n\n\n",
+//						pakBasename[3]-'0', path->pack->checksum );
+//				}
+//				Com_Error(ERR_FATAL, "\n* You need to install correct Quake III Arena files in order to play *");
+//			}
+//
+//			foundPak |= 1<<(pakBasename[3]-'0');
+//		}
+//	}
+//
+//	if(!founddemo && (foundPak & 0x1ff) != 0x1ff )
+//	{
+//		if((foundPak&1) != 1 )
+//		{
+//			Com_Printf("\n\n"
+//			"pak0.pk3 is missing. Please copy it\n"
+//			"from your legitimate Q3 CDROM.\n");
+//		}
+//
+//		if((foundPak&0x1fe) != 0x1fe )
+//		{
+//			Com_Printf("\n\n"
+//			"Point Release files are missing. Please\n"
+//			"re-install the 1.32 point release.\n");
+//		}
+//
+//		Com_Printf("\n\n"
+//			"Also check that your Q3 executable is in\n"
+//			"the correct place and that every file\n"
+//			"in the %s directory is present and readable.\n", BASEGAME);
+//
+//		if(!fs_gamedirvar->string[0]
+//		|| !Q_stricmp( fs_gamedirvar->string, BASEGAME )
+//		|| !Q_stricmp( fs_gamedirvar->string, BASETA ))
+//			Com_Error(ERR_FATAL, "\n*** you need to install Quake III Arena in order to play ***");
+//	}
+//}
 
 
 /*
@@ -5298,6 +5353,13 @@ void FS_InitFilesystem( void ) {
 	Com_StartupVariable( "fs_basepath" );
 	Com_StartupVariable( "fs_homepath" );
 	Com_StartupVariable( "fs_game" );
+
+	#ifndef USE_AUTH
+	// mickael9: AUTH system requires fs_game to be set
+	if (!FS_FilenameCompare(Cvar_VariableString("fs_game"), fs_basegame->string))
+		Cvar_Set("fs_game", "");
+	#endif
+
 	Com_StartupVariable( "fs_basegame" );
 	Com_StartupVariable( "fs_copyfiles" );
 	Com_StartupVariable( "fs_restrict" );

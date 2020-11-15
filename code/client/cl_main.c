@@ -110,6 +110,11 @@ char				cl_oldGame[ MAX_QPATH ];
 qboolean			cl_oldGameSet;
 static	qboolean	noGameRestart = qfalse;
 
+#ifdef USE_MV
+void CL_Multiview_f( void );
+void CL_MultiviewFollow_f( void );
+#endif
+
 #ifdef USE_CURL
 download_t			download;
 #endif
@@ -2418,6 +2423,8 @@ static void CL_InitServerInfo( serverInfo_t *server, const netadr_t *address ) {
 	server->gameType = 0;
 	server->netType = 0;
 	server->auth = 0;
+    server->password = 0;
+    server->modversion[0] = '\0';
 	server->punkbuster = 0;
 	server->g_humanplayers = 0;
 	server->g_needpass = 0;
@@ -2813,8 +2820,9 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 
 	#ifdef USE_AUTH
 	//@Barbatos @Kalish
-	if (strstr(c, "AUTH:CL")) {
-		VM_Call(uivm, 1, UI_AUTHSERVER_PACKET, from);
+	if ( !Q_stricmp(c, "AUTH:CL") ) {
+		Com_Printf("AUTH:CL\n");
+    	VM_Call(uivm, 1, UI_AUTHSERVER_PACKET, from);
 		return qfalse;
 	}
 	#endif
@@ -3952,6 +3960,12 @@ void CL_Init( void ) {
 #endif
 	Cmd_AddCommand( "modelist", CL_ModeList_f );
 
+#ifdef USE_MV
+    Cmd_AddCommand( "mvjoin", CL_Multiview_f );
+    Cmd_AddCommand( "mvleave", CL_Multiview_f );
+    Cmd_AddCommand( "mvfollow", CL_MultiviewFollow_f );
+#endif
+
 	CL_InitRef();
 
 	SCR_Init();
@@ -4035,6 +4049,12 @@ void CL_Shutdown( const char *finalmsg, qboolean quit ) {
 	Cmd_RemoveCommand( "dlmap" );
 #endif
 
+#ifdef USE_MV
+	Cmd_RemoveCommand( "mvjoin" );
+	Cmd_RemoveCommand( "mvleave" );
+	Cmd_RemoveCommand( "mvfollow" );
+#endif
+
 	CL_ClearInput();
 
 	Cvar_Set( "cl_running", "0" );
@@ -4061,7 +4081,9 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 			server->maxPing = atoi(Info_ValueForKey(info, "maxping"));
 			server->punkbuster = atoi(Info_ValueForKey(info, "punkbuster"));
             server->auth = atoi(Info_ValueForKey(info, "auth"));
-			server->g_humanplayers = atoi(Info_ValueForKey(info, "g_humanplayers"));
+            server->password = atoi(Info_ValueForKey(info, "password"));
+            Q_strncpyz(server->modversion, Info_ValueForKey(info, "modversion"), MAX_NAME_LENGTH);
+            server->g_humanplayers = atoi(Info_ValueForKey(info, "g_humanplayers"));
 			server->g_needpass = atoi(Info_ValueForKey(info, "g_needpass"));
 		}
 		server->ping = ping;
@@ -5015,3 +5037,62 @@ static void CL_Download_f( void )
 }
 #endif // USE_CURL
 
+#ifdef USE_MV
+static qboolean GetConfigString(int index, char * buf, int size) {
+    int offset;
+
+    if (index < 0 || index >= MAX_CONFIGSTRINGS) {
+        buf[0] = '\0';
+        return qfalse;
+    }
+
+    offset = cl.gameState.stringOffsets[index];
+    if (!offset) {
+        if (size) {
+            buf[0] = '\0';
+        }
+        return qfalse;
+    }
+
+    Q_strncpyz(buf, cl.gameState.stringData + offset, size);
+
+    return qtrue;
+}
+
+void CL_Multiview_f(void) {
+    char serverinfo[MAX_INFO_STRING];
+    char * v;
+
+    if (cls.state != CA_ACTIVE || !cls.servername[0] || clc.demoplaying) {
+        Com_Printf("Not connected.\n");
+        return;
+    }
+
+    if (!GetConfigString(CS_SERVERINFO, serverinfo, sizeof(serverinfo)) || !serverinfo[0]) {
+        Com_Printf("No serverinfo available.\n");
+    }
+
+    v = Info_ValueForKey(serverinfo, "mvproto");
+    if (atoi(v) != MV_PROTOCOL_VERSION) {
+        Com_Printf(S_COLOR_YELLOW "Remote server does not support this function.\n");
+        return;
+    }
+
+    CL_AddReliableCommand(Cmd_Argv(0), qfalse);
+}
+
+void CL_MultiviewFollow_f(void) {
+    int clientNum;
+
+    if (!cl.snap.multiview)
+        return;
+
+    clientNum = atoi(Cmd_Argv(1));
+
+    if ((unsigned) clientNum >= MAX_CLIENTS)
+        return;
+
+    if (GET_ABIT(cl.snap.clientMask, clientNum))
+        clc.clientView = clientNum;
+}
+#endif // USE_MV

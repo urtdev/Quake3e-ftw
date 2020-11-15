@@ -917,7 +917,25 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case BOTLIB_AI_GENETIC_PARENTS_AND_CHILD_SELECTION:
 		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));
+    #ifdef USE_AUTH
+    case G_NET_STRINGTOADR:
+		return NET_StringToAdr( VMA(1), VMA(2), NA_IP);
 
+	case G_NET_SENDPACKET:
+		{
+			netadr_t addr;
+			const char * destination = VMA(4);
+
+			NET_StringToAdr( destination, &addr, NA_IP);
+			NET_SendPacket( args[1], args[2], VMA(3), (const netadr_t *) &addr );
+		}
+		return 0;
+
+	//case G_SYS_STARTPROCESS:
+	//	Sys_StartProcess( VMA(1), VMA(2) );
+	//	return 0;
+
+    #endif
 
 #ifdef sc
     case G_NET_STRINGTOADR:
