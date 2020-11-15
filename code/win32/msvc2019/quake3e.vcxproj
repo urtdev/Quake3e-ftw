@@ -107,7 +107,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_CURL;USE_VULKAN_API;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -119,8 +119,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
-      <FloatingPointModel>
-      </FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <StructMemberAlignment>
       </StructMemberAlignment>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -130,10 +129,8 @@
       <CreateHotpatchableImage>
       </CreateHotpatchableImage>
       <GuardEHContMetadata>false</GuardEHContMetadata>
-      <ControlFlowGuard>
-      </ControlFlowGuard>
-      <FunctionLevelLinking>
-      </FunctionLevelLinking>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <StringPooling>
       </StringPooling>
       <SmallerTypeCheck />
@@ -141,6 +138,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <IntelJCCErratum>true</IntelJCCErratum>
     </ClCompile>
     <ResourceCompile />
     <Link>
@@ -180,7 +178,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;_WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_CURL;USE_VULKAN_API;_WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
@@ -188,8 +186,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
-      <FloatingPointModel>
-      </FloatingPointModel>
+      <FloatingPointModel>Precise</FloatingPointModel>
       <StructMemberAlignment>
       </StructMemberAlignment>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -199,10 +196,8 @@
       <CreateHotpatchableImage>
       </CreateHotpatchableImage>
       <GuardEHContMetadata>false</GuardEHContMetadata>
-      <ControlFlowGuard>
-      </ControlFlowGuard>
-      <FunctionLevelLinking>
-      </FunctionLevelLinking>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <StringPooling>
       </StringPooling>
       <SmallerTypeCheck />
@@ -211,6 +206,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <IntelJCCErratum>true</IntelJCCErratum>
     </ClCompile>
     <Link>
       <AdditionalOptions>/DYNAMICBASE %(AdditionalOptions)</AdditionalOptions>
