@@ -2408,6 +2408,7 @@ CL_InitServerInfo
 static void CL_InitServerInfo( serverInfo_t *server, const netadr_t *address ) {
 	server->adr = *address;
 	server->clients = 0;
+	server->bots = 0;
 	server->hostName[0] = '\0';
 	server->mapName[0] = '\0';
 	server->maxClients = 0;
@@ -2418,6 +2419,8 @@ static void CL_InitServerInfo( serverInfo_t *server, const netadr_t *address ) {
 	server->gameType = 0;
 	server->netType = 0;
 	server->auth = 0;
+    server->password = 0;
+    server->modversion[0] = '\0';
 	server->punkbuster = 0;
 	server->g_humanplayers = 0;
 	server->g_needpass = 0;
@@ -4051,6 +4054,7 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 	if (server) {
 		if (info) {
 			server->clients = atoi(Info_ValueForKey(info, "clients"));
+			server->bots = atoi(Info_ValueForKey(info, "bots"));
 			Q_strncpyz(server->hostName,Info_ValueForKey(info, "hostname"), MAX_NAME_LENGTH);
 			Q_strncpyz(server->mapName, Info_ValueForKey(info, "mapname"), MAX_NAME_LENGTH);
 			server->maxClients = atoi(Info_ValueForKey(info, "sv_maxclients"));
@@ -4061,7 +4065,9 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 			server->maxPing = atoi(Info_ValueForKey(info, "maxping"));
 			server->punkbuster = atoi(Info_ValueForKey(info, "punkbuster"));
             server->auth = atoi(Info_ValueForKey(info, "auth"));
-			server->g_humanplayers = atoi(Info_ValueForKey(info, "g_humanplayers"));
+            server->password = atoi(Info_ValueForKey(info, "password"));
+            Q_strncpyz(server->modversion, Info_ValueForKey(info, "modversion"), MAX_NAME_LENGTH);
+            server->g_humanplayers = atoi(Info_ValueForKey(info, "g_humanplayers"));
 			server->g_needpass = atoi(Info_ValueForKey(info, "g_needpass"));
 		}
 		server->ping = ping;
