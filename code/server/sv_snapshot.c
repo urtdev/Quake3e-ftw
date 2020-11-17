@@ -1178,7 +1178,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 #ifdef USE_MV
     if ( frame->multiview ) {
-        clientPVS_t *pvs;
+//        clientPVS_t *pvs;
         psFrame_t *psf;
         int slot;
         for ( slot = 0 ; slot < sv_maxclients->integer; slot++ ) {
