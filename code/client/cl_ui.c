@@ -1185,11 +1185,9 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 
 #ifdef USE_AUTH
     case UI_NET_STRINGTOADR:
-        Com_Printf("UI_NET_STRINGTOADR\n");
 		return NET_StringToAdr( VMA(1), VMA(2), NA_IP);
 
 	case UI_Q_VSNPRINTF:
-	    Com_Printf("UI_Q_VSNPRINTF\n");
 		return Q_vsnprintf( VMA(1), *((size_t *)VMA(2)), VMA(3), VMA(4));
 
 	case UI_NET_SENDPACKET:
@@ -1198,13 +1196,11 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 			const char * destination = VMA(4);
 
 			NET_StringToAdr( destination, &addr, NA_IP);
-			Com_Printf("address: %d.%d.%d.%d:%d\n", addr.ipv._4[0], addr.ipv._4[1], addr.ipv._4[2], addr.ipv._4[3], addr.port);
 			NET_SendPacket( args[1], args[2], VMA(3), &addr );
 		}
 		return 0;
 
 	case UI_COPYSTRING:
-	    Com_Printf("UI_COPYSTRING\n");
 		CopyString(VMA(1));
 		return 0;
 
