@@ -91,6 +91,7 @@ int numConsoles = 5;
 
 cvar_t		*con_conspeed;
 cvar_t		*con_notifytime;
+cvar_t 		*con_timestamp;
 
 vec4_t	    console_color = {1.0, 1.0, 1.0, 1.0};
 
@@ -419,6 +420,7 @@ void Con_Init( void )
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
 	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
+    con_timestamp = Cvar_Get( "con_timestamp", "1", CVAR_ARCHIVE );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
@@ -632,6 +634,14 @@ void CL_ConsolePrint( char *txt ) {
 	qboolean isChat = qfalse;
 
 	qboolean skipnotify = qfalse;		// NERVE - SMF
+
+    if (currentCon->x==0 && con_timestamp && con_timestamp->integer) {
+        char txtt[MAXPRINTMSG];
+        qtime_t	now;
+        Com_RealTime( &now );
+        Com_sprintf(txtt,sizeof(txtt),"^9%02d:%02d:%02d ^7%s",now.tm_hour,now.tm_min,now.tm_sec,txt);
+        strcpy(txt,txtt);
+    }
 
 	// TTimo - prefix for text that shows up in console but not in notify
 	// backported from RTCW

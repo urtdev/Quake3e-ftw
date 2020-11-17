@@ -39,10 +39,10 @@ const int demo_protocols[] = { 66, 67, PROTOCOL_VERSION, NEW_PROTOCOL_VERSION, 0
 #define USE_MULTI_SEGMENT // allocate additional zone segments on demand
 
 #ifdef DEDICATED
-#define MIN_COMHUNKMEGS		48
+#define MIN_COMHUNKMEGS		96
 #define DEF_COMHUNKMEGS		96
 #else
-#define MIN_COMHUNKMEGS		64
+#define MIN_COMHUNKMEGS		512
 #define DEF_COMHUNKMEGS		512
 #endif
 

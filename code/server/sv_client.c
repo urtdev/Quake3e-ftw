@@ -906,15 +906,16 @@ void SV_Auth_DropClient( client_t *drop, const char *reason, const char *message
 	}*/
 
 	// Kill any download
-	SV_CloseDownload( drop );
+//	SV_CloseDownload( drop );
 
 	// tell everyone why they got dropped
-	if( strlen( reason ) > 0 ) SV_SendServerCommand( NULL, "print \"%s\n\"", reason );
-
-	if (drop->download)	{
-		FS_FCloseFile( drop->download );
-		drop->download = 0;
-	}
+	if (reason != NULL && strlen(reason) > 0)
+		SV_SendServerCommand( NULL, "print \"%s" S_COLOR_WHITE " %s\n\"", drop->name, reason );
+//
+//	if (drop->download)	{
+//		FS_FCloseFile( drop->download );
+//		drop->download = 0;
+//	}
 
 	/*if (drop->demo_recording) {
         // stop the server side demo if we were recording this client
@@ -923,7 +924,7 @@ void SV_Auth_DropClient( client_t *drop, const char *reason, const char *message
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things
-	VM_Call( gvm, GAME_CLIENT_DISCONNECT, drop - svs.clients );
+	VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
 
 	// add the disconnect command
 	SV_SendServerCommand( drop, "disconnect \"%s\"", message);
@@ -936,7 +937,13 @@ void SV_Auth_DropClient( client_t *drop, const char *reason, const char *message
 	SV_SetUserinfo( drop - svs.clients, "" );
 
 	Com_DPrintf( "Going to CS_ZOMBIE for %s\n", drop->name );
-	drop->state = CS_ZOMBIE;		// become free in a few seconds
+	if (isBot) {
+		// bots shouldn't go zombie, as there's no real net connection.
+		drop->state = CS_FREE;
+	} else {
+		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", drop->name );
+		drop->state = CS_ZOMBIE;		// become free in a few seconds
+	}
 
 	// if this was the last client on the server, send a heartbeat
 	// to the master so it is known the server is empty

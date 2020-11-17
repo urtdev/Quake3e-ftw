@@ -237,6 +237,7 @@ typedef struct {
 	char		downloadURL[MAX_OSPATH];
 	CURL		*downloadCURL;
 	CURLM		*downloadCURLM;
+	char		mapname[MAX_CVAR_VALUE_STRING];
 #endif /* USE_CURL */
 
 	// demo information
@@ -315,6 +316,7 @@ typedef struct {
 	int			punkbuster;
     int			auth; //@Barbatos: auth system
     int			password; //@Barbatos: passworded server?
+    int         bots;
     char 		modversion[MAX_NAME_LENGTH]; //@Barbatos - g_modversion
 	int			g_humanplayers;
 	int			g_needpass;

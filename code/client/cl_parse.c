@@ -659,6 +659,10 @@ static void CL_ParseServerInfo( void )
 		Info_ValueForKey(serverInfo, "sv_dlURL"),
 		sizeof(clc.sv_dlURL));
 
+#ifdef USE_CURL
+    Q_strncpyz(clc.mapname, Info_ValueForKey(serverInfo, "mapname"), sizeof(clc.mapname));
+#endif
+
 	/* remove ending slash in URLs */
 	len = strlen( clc.sv_dlURL );
 	if ( len > 0 &&  clc.sv_dlURL[len-1] == '/' )

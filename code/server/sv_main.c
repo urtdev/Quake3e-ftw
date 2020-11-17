@@ -860,10 +860,10 @@ static netadr_t redirectAddress; // for rcon return messages
 
 static void SV_FlushRedirect( const char *outputbuf )
 {
-	if ( *outputbuf )
-	{
-		NET_OutOfBandPrint( NS_SERVER, &redirectAddress, "print\n%s", outputbuf );
-	}
+//	if ( *outputbuf )
+//	{
+		NET_OutOfBandPrint( NS_SERVER, &svs.redirectAddress, "print\n%s", outputbuf );
+//	}
 }
 
 
@@ -910,7 +910,8 @@ static void SVC_RemoteCommand( const netadr_t *from ) {
 	}
 
 	// start redirecting all print outputs to the packet
-	redirectAddress = *from;
+//	redirectAddress = *from;
+    svs.redirectAddress = *from;
 	Com_BeginRedirect( sv_outputbuf, sizeof( sv_outputbuf ), SV_FlushRedirect );
 
 	if ( !sv_rconPassword->string[0] && !rconPassword2[0] ) {
@@ -1010,9 +1011,15 @@ static void SV_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		// removed from codebase since stateless challenges
 #endif
 	}
+	
+	else if (!Q_stricmp(c, "disconnect")) {
+		// if a client starts up a local server, we may see some spurious
+		// server disconnect messages when their new server sees our final
+		// sequenced messages to the old client
+	}
 
-	#ifdef USE_AUTH
-	// @Barbatos @Kalish
+#ifdef USE_AUTH
+        // @Barbatos @Kalish
 	else if ((!Q_stricmp(c, "AUTH:SV")))
 	{
 		NET_StringToAdr(sv_authServerIP->string, &authServerIP, NA_IP);
@@ -1023,13 +1030,9 @@ static void SV_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		}
 		VM_Call(gvm, 0, GAME_AUTHSERVER_PACKET);
 	}
-	#endif
-	
-	else if (!Q_stricmp(c, "disconnect")) {
-		// if a client starts up a local server, we may see some spurious
-		// server disconnect messages when their new server sees our final
-		// sequenced messages to the old client
-	} else {
+#endif
+
+	else {
 		if ( com_developer->integer ) {
 			Com_Printf( "bad connectionless packet from %s:\n%s\n",
 				NET_AdrToString( from ), s );

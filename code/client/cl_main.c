@@ -64,6 +64,8 @@ cvar_t	*cl_serverStatusResendTime;
 
 cvar_t	*cl_lanForcePackets;
 
+cvar_t	*cl_lastServerAddress;
+
 cvar_t	*cl_guidServerUniq;
 
 #ifdef USE_AUTH
@@ -1139,21 +1141,17 @@ update cl_guid using QKEY_FILE and optional prefix
 */
 static void CL_UpdateGUID( const char *prefix, int prefix_len )
 {
-#ifdef USE_Q3KEY
 	fileHandle_t f;
 	int len;
 
 	len = FS_SV_FOpenFileRead( QKEY_FILE, &f );
 	FS_FCloseFile( f );
 
-	if( len != QKEY_SIZE ) 
+	if( len != QKEY_SIZE )
 		Cvar_Set( "cl_guid", "" );
 	else
 		Cvar_Set( "cl_guid", Com_MD5File( QKEY_FILE, QKEY_SIZE,
 			prefix, prefix_len ) );
-#else
-	Cvar_Set( "cl_guid", Com_MD5Buf( &cl_cdkey[0], sizeof(cl_cdkey), prefix, prefix_len));
-#endif
 }
 
 
@@ -1420,47 +1418,47 @@ in anyway.
 */
 #ifndef STANDALONE
 static void CL_RequestAuthorization( void ) {
-	char	nums[64];
-	int		i, j, l;
-	cvar_t	*fs;
-
-	if ( !cls.authorizeServer.port ) {
-		Com_Printf( "Resolving %s\n", AUTHORIZE_SERVER_NAME );
-		if ( !NET_StringToAdr( AUTHORIZE_SERVER_NAME, &cls.authorizeServer, NA_IP ) ) {
-			Com_Printf( "Couldn't resolve address\n" );
-			return;
-		}
-
-		cls.authorizeServer.port = BigShort( PORT_AUTHORIZE );
-		Com_Printf( "%s resolved to %i.%i.%i.%i:%i\n", AUTHORIZE_SERVER_NAME,
-			cls.authorizeServer.ipv._4[0], cls.authorizeServer.ipv._4[1],
-			cls.authorizeServer.ipv._4[2], cls.authorizeServer.ipv._4[3],
-			BigShort( cls.authorizeServer.port ) );
-	}
-	if ( cls.authorizeServer.type == NA_BAD ) {
-		return;
-	}
-
-	// only grab the alphanumeric values from the cdkey, to avoid any dashes or spaces
-	j = 0;
-	l = strlen( cl_cdkey );
-	if ( l > 32 ) {
-		l = 32;
-	}
-	for ( i = 0 ; i < l ; i++ ) {
-		if ( ( cl_cdkey[i] >= '0' && cl_cdkey[i] <= '9' )
-				|| ( cl_cdkey[i] >= 'a' && cl_cdkey[i] <= 'z' )
-				|| ( cl_cdkey[i] >= 'A' && cl_cdkey[i] <= 'Z' )
-			 ) {
-			nums[j] = cl_cdkey[i];
-			j++;
-		}
-	}
-	nums[j] = 0;
-
-	fs = Cvar_Get ("cl_anonymous", "0", CVAR_INIT|CVAR_SYSTEMINFO );
-
-	NET_OutOfBandPrint(NS_CLIENT, &cls.authorizeServer, "getKeyAuthorize %i %s", fs->integer, nums );
+//	char	nums[64];
+//	int		i, j, l;
+//	cvar_t	*fs;
+//
+//	if ( !cls.authorizeServer.port ) {
+//		Com_Printf( "Resolving %s\n", AUTHORIZE_SERVER_NAME );
+//		if ( !NET_StringToAdr( AUTHORIZE_SERVER_NAME, &cls.authorizeServer, NA_IP ) ) {
+//			Com_Printf( "Couldn't resolve address\n" );
+//			return;
+//		}
+//
+//		cls.authorizeServer.port = BigShort( PORT_AUTHORIZE );
+//		Com_Printf( "%s resolved to %i.%i.%i.%i:%i\n", AUTHORIZE_SERVER_NAME,
+//			cls.authorizeServer.ipv._4[0], cls.authorizeServer.ipv._4[1],
+//			cls.authorizeServer.ipv._4[2], cls.authorizeServer.ipv._4[3],
+//			BigShort( cls.authorizeServer.port ) );
+//	}
+//	if ( cls.authorizeServer.type == NA_BAD ) {
+//		return;
+//	}
+//
+//	// only grab the alphanumeric values from the cdkey, to avoid any dashes or spaces
+//	j = 0;
+//	l = strlen( cl_cdkey );
+//	if ( l > 32 ) {
+//		l = 32;
+//	}
+//	for ( i = 0 ; i < l ; i++ ) {
+//		if ( ( cl_cdkey[i] >= '0' && cl_cdkey[i] <= '9' )
+//				|| ( cl_cdkey[i] >= 'a' && cl_cdkey[i] <= 'z' )
+//				|| ( cl_cdkey[i] >= 'A' && cl_cdkey[i] <= 'Z' )
+//			 ) {
+//			nums[j] = cl_cdkey[i];
+//			j++;
+//		}
+//	}
+//	nums[j] = 0;
+//
+//	fs = Cvar_Get ("cl_anonymous", "0", CVAR_INIT|CVAR_SYSTEMINFO );
+//
+//	NET_OutOfBandPrint(NS_CLIENT, &cls.authorizeServer, "getKeyAuthorize %i %s", fs->integer, nums );
 }
 #endif
 
@@ -1530,8 +1528,10 @@ CL_Reconnect_f
 ================
 */
 static void CL_Reconnect_f( void ) {
-	if ( cl_reconnectArgs[0] == '\0' )
-		return;
+    if (!strlen(cl_lastServerAddress->string) || !strcmp(cl_lastServerAddress->string, "localhost")) {
+        Com_Printf( "Can't reconnect to localhost.\n" );
+        return;
+    }
 	Cvar_Set( "ui_singlePlayerActive", "0" );
 	Cbuf_AddText( va( "connect %s\n", cl_reconnectArgs ) );
 }
@@ -1667,6 +1667,7 @@ static void CL_Connect_f( void ) {
 	}
 
 	Key_SetCatcher( 0 );
+    Cvar_Set("cl_lastServerAddress", serverString);
 	clc.connectTime = -99999;	// CL_CheckForResend() will fire immediately
 	clc.connectPacketCount = 0;
 
@@ -2151,6 +2152,7 @@ void CL_NextDownload( void )
 
 		*s++ = '\0';
 		localName = s;
+        Com_sprintf(localName, MAX_STRING_CHARS, "q3ut4/download/%s", COM_SkipPath(CopyString(localName)));
 		if ( (s = strchr(s, '@')) != NULL )
 			*s++ = '\0';
 		else
@@ -2210,6 +2212,54 @@ void CL_NextDownload( void )
 	CL_DownloadsComplete();
 }
 
+#ifdef USE_CURL
+static void CL_FirstDownload(void) {
+	char *s, *name;
+	// Remove everything that isn't the current map in the download list
+	while (*clc.downloadList) {
+		qboolean keep = qfalse;
+		s = clc.downloadList;
+		if (*s == '@')
+			s++;
+
+		name = s;
+
+		if ((s = strchr(s, '@')) == NULL) {
+			*clc.downloadList = 0;
+			break;
+		}
+
+		*s = 0;
+
+		if (!Q_stricmp(COM_SkipPath(name), va("%s.pk3", clc.mapname))) {
+			keep = qtrue;
+		}
+
+		*s++ = '@';
+
+		name = s;
+
+		if ((s = strchr(s, '@')) == NULL) {
+			s = name + strlen(name);
+		}
+
+		if (keep) {
+			*s = 0;
+			break;
+		} else {
+			memmove(clc.downloadList, s, strlen(s) + 1);
+		}
+	}
+
+	Com_DPrintf("Rewritten download list: %s\n", clc.downloadList);
+
+	if (*clc.downloadList) {
+		CL_NextDownload();
+	} else {
+		CL_DownloadsComplete();
+	}
+}
+#endif
 
 /*
 =================
@@ -2247,7 +2297,11 @@ void CL_InitDownloads( void ) {
 			*clc.downloadTempName = *clc.downloadName = '\0';
 			Cvar_Set( "cl_downloadName", "" );
 
-			CL_NextDownload();
+        #ifdef USE_CURL
+            CL_FirstDownload();
+        #else
+			CL_NextDownload()
+        #endif
 			return;
 		}
 
@@ -2425,6 +2479,7 @@ static void CL_InitServerInfo( serverInfo_t *server, const netadr_t *address ) {
 	server->auth = 0;
     server->password = 0;
     server->modversion[0] = '\0';
+    server->bots = 0;
 	server->punkbuster = 0;
 	server->g_humanplayers = 0;
 	server->g_needpass = 0;
@@ -2820,8 +2875,7 @@ static qboolean CL_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 
 	#ifdef USE_AUTH
 	//@Barbatos @Kalish
-	if ( !Q_stricmp(c, "AUTH:CL") ) {
-		Com_Printf("AUTH:CL\n");
+	if ( strstr(c, "AUTH:CL") ) {
     	VM_Call(uivm, 1, UI_AUTHSERVER_PACKET, from);
 		return qfalse;
 	}
@@ -3640,7 +3694,7 @@ static void CL_GenerateQKey(void)
 		FS_FCloseFile( f );
 		Com_Printf( "QKEY generated\n" );
 	}
-} 
+}
 #endif
 
 
@@ -3860,9 +3914,11 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
+    cl_lastServerAddress = Cvar_Get("cl_lastServerAddress", "", CVAR_ARCHIVE_ND);
+
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL
-	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "0", CVAR_ARCHIVE_ND );
+	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "1", CVAR_ARCHIVE_ND );
 #ifdef USE_CURL_DLOPEN
 	cl_cURLLib = Cvar_Get( "cl_cURLLib", DEFAULT_CURL_LIB, 0 );
 #endif
@@ -3898,8 +3954,8 @@ void CL_Init( void ) {
 	cl_dlDirectory = Cvar_Get( "cl_dlDirectory", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( cl_dlDirectory, "0", "1", CV_INTEGER );
 	s = va( "Save downloads initiated by \\dlmap and \\download commands in:\n"
-		" 0 - current game directory\n"
-		" 1 - fs_basegame (%s) directory\n", FS_GetBaseGameDir() );
+        " 0 - current game /download directory\n"
+        " 1 - fs_basegame (%s) /download directory\n", FS_GetBaseGameDir() );
 	Cvar_SetDescription( cl_dlDirectory, s );
 
     #ifdef USE_AUTH
@@ -3974,7 +4030,7 @@ void CL_Init( void ) {
 
 	Cvar_Set( "cl_running", "1" );
 #ifdef USE_MD5
-	CL_GenerateQKey();	
+	CL_GenerateQKey();
 #endif
 	Cvar_Get( "cl_guid", "", CVAR_USERINFO | CVAR_ROM | CVAR_PROTECTED );
 	CL_UpdateGUID( NULL, 0 );
@@ -4071,6 +4127,7 @@ static void CL_SetServerInfo(serverInfo_t *server, const char *info, int ping) {
 	if (server) {
 		if (info) {
 			server->clients = atoi(Info_ValueForKey(info, "clients"));
+            server->bots = atoi(Info_ValueForKey(info, "bots"));
 			Q_strncpyz(server->hostName,Info_ValueForKey(info, "hostname"), MAX_NAME_LENGTH);
 			Q_strncpyz(server->mapName, Info_ValueForKey(info, "mapname"), MAX_NAME_LENGTH);
 			server->maxClients = atoi(Info_ValueForKey(info, "sv_maxclients"));

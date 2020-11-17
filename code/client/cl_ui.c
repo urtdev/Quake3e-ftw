@@ -39,12 +39,10 @@ static void GetClientState( uiClientState_t *state ) {
 	Q_strncpyz( state->servername, cls.servername, sizeof( state->servername ) );
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
-
+    state->clientNum = cl.snap.ps.clientNum;
 #ifdef USE_AUTH
-    Q_strncpyz( state->serverAddress, NET_AdrToString(&clc.serverAddress), sizeof( state->serverAddress ) );
+    Q_strncpyz( state->serverAddress, NET_AdrToStringwPort(&clc.serverAddress), sizeof( state->serverAddress ) );
 #endif
-
-	state->clientNum = cl.snap.ps.clientNum;
 }
 
 
@@ -317,6 +315,7 @@ static void LAN_GetServerInfo( int source, int n, char *buf, int buflen ) {
 		Info_SetValueForKey( info, "hostname", server->hostName);
 		Info_SetValueForKey( info, "mapname", server->mapName);
 		Info_SetValueForKey( info, "clients", va("%i",server->clients));
+        Info_SetValueForKey( info, "bots", va("%i",server->bots));
 		Info_SetValueForKey( info, "sv_maxclients", va("%i",server->maxClients));
 		Info_SetValueForKey( info, "ping", va("%i",server->ping));
 		Info_SetValueForKey( info, "minping", va("%i",server->minPing));
@@ -1069,8 +1068,8 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Hunk_MemoryRemaining();
 
 	case UI_GET_CDKEY:
-		VM_CHECKBOUNDS( uivm, args[1], args[2] );
-		CLUI_GetCDKey( VMA(1), args[2] );
+//		VM_CHECKBOUNDS( uivm, args[1], args[2] );
+//		CLUI_GetCDKey( VMA(1), args[2] );
 		return 0;
 
 	case UI_SET_CDKEY:
@@ -1143,17 +1142,20 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return Com_RealTime( VMA(1) );
 
 	case UI_CIN_PLAYCINEMATIC:
-		Com_DPrintf("UI_CIN_PlayCinematic\n");
-		return CIN_PlayCinematic(VMA(1), args[2], args[3], args[4], args[5], args[6]);
+//		Com_DPrintf("UI_CIN_PlayCinematic\n");
+//		return CIN_PlayCinematic(VMA(1), args[2], args[3], args[4], args[5], args[6]);
+        return 0;
 
 	case UI_CIN_STOPCINEMATIC:
-		return CIN_StopCinematic(args[1]);
+//		return CIN_StopCinematic(args[1]);
+        return 0;
 
 	case UI_CIN_RUNCINEMATIC:
-		return CIN_RunCinematic(args[1]);
+//		return CIN_RunCinematic(args[1]);
+        return 0;
 
 	case UI_CIN_DRAWCINEMATIC:
-		CIN_DrawCinematic(args[1]);
+//		CIN_DrawCinematic(args[1]);
 		return 0;
 
 	case UI_CIN_SETEXTENTS:
@@ -1165,35 +1167,7 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_VERIFY_CDKEY:
-		return Com_CDKeyValidate(VMA(1), VMA(2));
-
-#ifdef USE_AUTH
-    case UI_NET_STRINGTOADR:
-		return NET_StringToAdr( VMA(1), VMA(2), NA_IP);
-
-	case UI_Q_VSNPRINTF:
-		return Q_vsnprintf( VMA(1), *((size_t *)VMA(2)), VMA(3), VMA(4));
-
-	case UI_NET_SENDPACKET:
-		{
-			netadr_t addr;
-			const char * destination = VMA(4);
-
-			NET_StringToAdr(destination, &addr, NA_IP);
-			Com_Printf("address: %d.%d.%d.%d:%d\n", addr.ipv._4[0], addr.ipv._4[1], addr.ipv._4[2], addr.ipv._4[3], addr.port);
-			NET_SendPacket(args[1], args[2], VMA(3), &addr);
-		}
 		return 0;
-
-	case UI_COPYSTRING:
-		CopyString(VMA(1));
-		return 0;
-
-	//case UI_SYS_STARTPROCESS:
-	//	Sys_StartProcess( VMA(1), VMA(2) );
-	//	return 0;
-
-#endif
 
 	// engine extensions
 	case UI_R_ADDREFENTITYTOSCENE2:
@@ -1208,6 +1182,37 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_TRAP_GETVALUE:
 		VM_CHECKBOUNDS( uivm, args[1], args[2] );
 		return UI_GetValue( VMA(1), args[2], VMA(3) );
+
+#ifdef USE_AUTH
+    case UI_NET_STRINGTOADR:
+        Com_Printf("UI_NET_STRINGTOADR\n");
+		return NET_StringToAdr( VMA(1), VMA(2), NA_IP);
+
+	case UI_Q_VSNPRINTF:
+	    Com_Printf("UI_Q_VSNPRINTF\n");
+		return Q_vsnprintf( VMA(1), *((size_t *)VMA(2)), VMA(3), VMA(4));
+
+	case UI_NET_SENDPACKET:
+		{
+			netadr_t addr;
+			const char * destination = VMA(4);
+
+			NET_StringToAdr( destination, &addr, NA_IP);
+			Com_Printf("address: %d.%d.%d.%d:%d\n", addr.ipv._4[0], addr.ipv._4[1], addr.ipv._4[2], addr.ipv._4[3], addr.port);
+			NET_SendPacket( args[1], args[2], VMA(3), &addr );
+		}
+		return 0;
+
+	case UI_COPYSTRING:
+	    Com_Printf("UI_COPYSTRING\n");
+		CopyString(VMA(1));
+		return 0;
+
+	//case UI_SYS_STARTPROCESS:
+	//	Sys_StartProcess( VMA(1), VMA(2) );
+	//	return 0;
+
+#endif
 		
 	default:
 		Com_Error( ERR_DROP, "Bad UI system trap: %ld", (long int) args[0] );

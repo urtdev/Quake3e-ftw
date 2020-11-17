@@ -199,13 +199,13 @@ typedef enum {
 // if !overlay, the background will be drawn, otherwise it will be
 // overlayed over whatever the cgame has drawn.
 // a GetClientState syscall will be made to get the current strings
-	
-	UI_EXPORT_LAST,
 
-    #ifdef USE_AUTH
+#ifdef USE_AUTH
     //@Barbatos @Kalish
 	UI_AUTHSERVER_PACKET,
-    #endif
+#endif
+	
+	UI_EXPORT_LAST,
 } uiExport_t;
 
 #endif

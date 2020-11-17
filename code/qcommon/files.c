@@ -4722,7 +4722,7 @@ static void FS_Startup( void ) {
 	fs_homepath = Cvar_Get( "fs_homepath", homePath, CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
 	Cvar_SetDescription( fs_homepath, "Directory to store user configuration and downloaded files." );
 
-	fs_gamedirvar = Cvar_Get( "fs_game", "q3ut4", CVAR_INIT | CVAR_SYSTEMINFO );
+	fs_gamedirvar = Cvar_Get( "fs_game", BASEGAME, CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
 
 	if ( !Q_stricmp( fs_basegame->string, fs_gamedirvar->string ) ) {
@@ -4744,16 +4744,19 @@ static void FS_Startup( void ) {
 
 	// add search path elements in reverse priority order
 	if ( fs_steampath->string[0] ) {
+        FS_AddGameDirectory(va("%s/q3ut4", fs_steampath->string), "download");
 		FS_AddGameDirectory( fs_steampath->string, fs_basegame->string );
 	}
 
 	if ( fs_basepath->string[0] ) {
+        FS_AddGameDirectory(va("%s/q3ut4", fs_basepath->string), "download");
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
 	}
 
 	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 	// NOTE: same filtering below for mods and basegame
 	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) ) {
+        FS_AddGameDirectory(va("%s/q3ut4", fs_homepath->string), "download");
 		FS_AddGameDirectory( fs_homepath->string, fs_basegame->string );
 	}
 
@@ -5354,11 +5357,11 @@ void FS_InitFilesystem( void ) {
 	Com_StartupVariable( "fs_homepath" );
 	Com_StartupVariable( "fs_game" );
 
-	#ifndef USE_AUTH
-	// mickael9: AUTH system requires fs_game to be set
-	if (!FS_FilenameCompare(Cvar_VariableString("fs_game"), fs_basegame->string))
-		Cvar_Set("fs_game", "");
-	#endif
+//	#ifndef USE_AUTH
+//	// mickael9: AUTH system requires fs_game to be set
+//	if (!FS_FilenameCompare(Cvar_VariableString("fs_game"), fs_basegame->string))
+//		Cvar_Set("fs_game", "");
+//	#endif
 
 	Com_StartupVariable( "fs_basegame" );
 	Com_StartupVariable( "fs_copyfiles" );
