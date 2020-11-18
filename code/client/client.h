@@ -317,7 +317,6 @@ typedef struct {
 	int			punkbuster;
     int			auth; //@Barbatos: auth system
     int			password; //@Barbatos: passworded server?
-    int         bots;
     char 		modversion[MAX_NAME_LENGTH]; //@Barbatos - g_modversion
 	int			g_humanplayers;
 	int			g_needpass;

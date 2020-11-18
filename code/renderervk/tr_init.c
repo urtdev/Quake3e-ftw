@@ -1451,40 +1451,79 @@ static void R_Register( void )
 	//
 	// temporary latched variables that can only change over a restart
 	//
-	r_fullbright = ri.Cvar_Get( "r_fullbright", "0", CVAR_LATCH );
-	r_overBrightBits = ri.Cvar_Get( "r_overBrightBits", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	r_mapOverBrightBits = ri.Cvar_Get( "r_mapOverBrightBits", "2", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_fullbright = ri.Cvar_Get( "r_fullbright", "0", CVAR_CHEAT );
+	ri.Cvar_CheckRange(r_fullbright, "0", "0", CV_INTEGER);
+	ri.Cvar_SetDescription(r_fullbright, "Toggle textures to full brightness level");
+
+	r_overBrightBits = ri.Cvar_Get( "r_overBrightBits", "0", CVAR_CHEAT );
+	ri.Cvar_CheckRange(r_overBrightBits, "0", "0", CV_INTEGER);
+
+	r_mapOverBrightBits = ri.Cvar_Get( "r_mapOverBrightBits", "0", CVAR_CHEAT );
+	ri.Cvar_SetDescription(r_mapOverBrightBits , "Set intensity level of lights reflected from textures");
+
 	r_intensity = ri.Cvar_Get( "r_intensity", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_intensity, "1", "255", CV_FLOAT );
+
 	r_singleShader = ri.Cvar_Get( "r_singleShader", "0", CVAR_CHEAT | CVAR_LATCH );
-	r_defaultImage = ri.Cvar_Get( "r_defaultImage", "", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange(r_singleShader, "0", "0", CV_INTEGER);
+	ri.Cvar_SetDescription(r_singleShader, "Toggles use of 1 shader for objects that have multiple shaders");
+
+	r_defaultImage = ri.Cvar_Get( "r_defaultImage", "", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_CHEAT );
+	ri.Cvar_SetDescription(r_defaultImage, "Replace the default (missing texture) images\n i.e. seta r_defaultImage \"textures\\liquids\\bubbles.tga\"");
 
 	r_simpleMipMaps = ri.Cvar_Get( "r_simpleMipMaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	r_vertexLight = ri.Cvar_Get( "r_vertexLight", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	ri.Cvar_CheckRange(r_simpleMipMaps, "0", "1", CV_INTEGER);
+	ri.Cvar_SetDescription(r_simpleMipMaps, "Toggle the use of \"simple\" mip mapping. used to \"dumb-down\" resoluiton displays for slower machines");
+
+	r_vertexLight = ri.Cvar_Get( "r_vertexLight", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_CHEAT );
+	ri.Cvar_CheckRange(r_vertexLight, "0", "0", CV_INTEGER);
+	ri.Cvar_SetDescription(r_vertexLight, "Enable vertex lighting (faster, lower quality than lightmap) removes lightmaps, forces every shader to only use a single rendering pass, no layered transparancy, environment mapping, world lighting is completely static, and there is no dynamic lighting when in vertex lighting mode.");
 
 	r_picmip = ri.Cvar_Get( "r_picmip", "1", CVAR_PROTECTED );
-	ri.Cvar_CheckRange( r_picmip, "0", "16", CV_INTEGER );
-	ri.Cvar_SetDescription( r_picmip, "Set texture quality, lower is better" );
+	ri.Cvar_CheckRange( r_picmip, "0", "2", CV_INTEGER );
+	ri.Cvar_SetDescription( r_picmip, "Set texture quality, lower value is better quality" );
 
 	r_nomip = ri.Cvar_Get( "r_nomip", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_nomip, "0", "1", CV_INTEGER );
 	ri.Cvar_SetDescription( r_nomip, "Apply picmip only on worldspawn textures" );
 
 	r_neatsky = ri.Cvar_Get( "r_neatsky", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	ri.Cvar_CheckRange(r_neatsky, "0", "1", CV_INTEGER);
+	ri.Cvar_SetDescription(r_neatsky, "No picmip applied to skybox, 1 for higher quality skybox");
+
 	r_roundImagesDown = ri.Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	r_colorMipLevels = ri.Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
+	ri.Cvar_SetDescription(r_roundImagesDown, "set rounding down amount (larger = faster, lower quality)");
+
+	r_colorMipLevels = ri.Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH | CVAR_CHEAT );
+	ri.Cvar_CheckRange(r_colorMipLevels, "0", "1", CV_INTEGER);
+	ri.Cvar_SetDescription(r_colorMipLevels, "Developer aid to see texture mip usage");
+
+
 	r_detailTextures = ri.Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange(r_detailTextures, "0", "1", CV_INTEGER);
+	ri.Cvar_SetDescription(r_detailTextures, "Enables the usage of detail texturing stages");
+
 	r_texturebits = ri.Cvar_Get( "r_texturebits", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange(r_texturebits, "0", "32", CV_INTEGER);
+	ri.Cvar_SetDescription(r_texturebits, "Sets the texture to 16-BIT. Can also be set to 32 (32-BIT) or 0, for default.");
 
 	r_mergeLightmaps = ri.Cvar_Get( "r_mergeLightmaps", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+    ri.Cvar_CheckRange(r_mergeLightmaps, "0", "1", CV_INTEGER);
+	ri.Cvar_SetDescription(r_mergeLightmaps, "Merge the small (128x128) lightmaps into 2 or fewer giant (4096x4096) lightmaps. Easy speedup. 0 - Don't. 1 - Do. (default)");
+
 #if defined (USE_VULKAN) && defined (USE_VBO)
 	r_vbo = ri.Cvar_Get( "r_vbo", "1", CVAR_ARCHIVE | CVAR_LATCH );
+    ri.Cvar_CheckRange(r_vbo, "0", "1", CV_INTEGER);
+    ri.Cvar_SetDescription(r_vbo, "GPU-accelerated static map geometry caching. 1 for better FPS (Default). 0 to disable.");
 #endif
 
-	r_mapGreyScale = ri.Cvar_Get( "r_mapGreyScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	ri.Cvar_CheckRange( r_mapGreyScale, "-1", "1", CV_FLOAT );
+	r_mapGreyScale = ri.Cvar_Get( "r_mapGreyScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH | CVAR_CHEAT );
+    ri.Cvar_CheckRange(r_mapGreyScale, "-1", "1", CV_FLOAT);
+    ri.Cvar_SetDescription(r_mapGreyScale, "Makes the map greyscale by desaturating the level textures.");
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
+//    ri.Cvar_CheckRange(r_subdivisions, "1", "4", CV_INTEGER);
+    ri.Cvar_SetDescription(r_subdivisions, "Set maximum level of detail. (an example would be the complexity of curves. 1=highest detail)");
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", XSTRING( MAX_POLYS ), CVAR_LATCH );
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", XSTRING( MAX_POLYVERTS ), CVAR_LATCH );
@@ -1506,6 +1545,7 @@ static void R_Register( void )
 #ifdef USE_PMLIGHT
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE );
 	ri.Cvar_CheckRange( r_dlightMode, "0", "2", CV_INTEGER );
+	ri.Cvar_SetDescription(r_dlightMode, "1 default dynamic lights | 2 - new per-pixel dynamic lights (Default)");
 	r_dlightScale = ri.Cvar_Get( "r_dlightScale", "0.5", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightScale, "0.1", "1", CV_FLOAT );
 	r_dlightIntensity = ri.Cvar_Get( "r_dlightIntensity", "1.0", CVAR_ARCHIVE_ND );
@@ -1528,7 +1568,7 @@ static void R_Register( void )
 
 	//r_anaglyphMode = ri.Cvar_Get( "r_anaglyphMode", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 
-	r_greyscale = ri.Cvar_Get( "r_greyscale", "0", CVAR_ARCHIVE_ND );
+	r_greyscale = ri.Cvar_Get( "r_greyscale", "0", CVAR_ARCHIVE_ND | CVAR_CHEAT );
 	ri.Cvar_CheckRange( r_greyscale, "-1", "1", CV_FLOAT );
 
 	//
@@ -1562,13 +1602,18 @@ static void R_Register( void )
 	r_speeds = ri.Cvar_Get ("r_speeds", "0", CVAR_CHEAT);
 	r_debugSurface = ri.Cvar_Get ("r_debugSurface", "0", CVAR_CHEAT);
 	r_nobind = ri.Cvar_Get ("r_nobind", "0", CVAR_CHEAT);
+	ri.Cvar_SetDescription(r_nobind, "toggle the binding of textures to triangles");
 	r_showtris = ri.Cvar_Get ("r_showtris", "0", CVAR_CHEAT);
+	ri.Cvar_SetDescription(r_showtris, "Show triangles");
 	r_shownormals = ri.Cvar_Get( "r_shownormals", "0", CVAR_CHEAT );
+	ri.Cvar_SetDescription(r_shownormals, "toggle the drawing of short lines indicating brush and entity polygon vertices");
 	r_clear = ri.Cvar_Get( "r_clear", "0", 0 );
+	ri.Cvar_SetDescription(r_clear, "toggle the clearing of the screen between frames");
 	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-2", CVAR_CHEAT | CVAR_LATCH );
 	r_offsetUnits = ri.Cvar_Get( "r_offsetunits", "-1", CVAR_CHEAT | CVAR_LATCH );
 	r_drawBuffer = ri.Cvar_Get( "r_drawBuffer", "GL_BACK", CVAR_CHEAT );
 	r_lockpvs = ri.Cvar_Get ("r_lockpvs", "0", CVAR_CHEAT);
+	ri.Cvar_SetDescription(r_lockpvs, "disable update to PVS table as player moves through map (new areas not rendered)");
 	r_noportals = ri.Cvar_Get( "r_noportals", "0", 0 );
 	r_shadows = ri.Cvar_Get( "cg_shadows", "1", 0 );
 
@@ -1608,9 +1653,16 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_device, "0", NULL, CV_INTEGER );
 	r_device->modified = qfalse;
 
-	r_fbo = ri.Cvar_Get( "r_fbo", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+    ri.Cvar_CheckRange(r_fbo, "0", "1", CV_INTEGER);
+    ri.Cvar_SetDescription(r_fbo, "Framebuffer support, higher FPS. 1 to enable (Default). 0 to disable.");
+
 	r_hdr = ri.Cvar_Get( "r_hdr", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_SetDescription(r_hdr, "Enable High Dynamic Range. 1 to enable, 0 to disable (default).");
+    ri.Cvar_CheckRange( r_hdr, "0", "1", CV_INTEGER );
+
 	r_bloom = ri.Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_SetDescription(r_hdr, "Enable High Dynamic Range. 1 to enable, 0 to disable (default).");
 	ri.Cvar_CheckRange( r_bloom, "0", "1", CV_INTEGER );
 
 	r_bloom_threshold = ri.Cvar_Get( "r_bloom_threshold", "0.6", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -1621,8 +1673,10 @@ static void R_Register( void )
 
 	r_ext_multisample = ri.Cvar_Get( "r_ext_multisample", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_ext_multisample, "0", "64", CV_INTEGER );
+	ri.Cvar_SetDescription(r_ext_multisample, "Multi-sample anti-aliasing. Values: 0, 2, 4, 6, 8");
 
 	r_ext_alpha_to_coverage = ri.Cvar_Get( "r_ext_alpha_to_coverage", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_SetDescription(r_ext_alpha_to_coverage, "Uses the alpha channel of textures as a coverage mask for anti-aliasing");
 	ri.Cvar_CheckRange( r_ext_alpha_to_coverage, "0", "1", CV_INTEGER );
 
 	r_renderWidth = ri.Cvar_Get( "r_renderWidth", "800", CVAR_ARCHIVE_ND | CVAR_LATCH );
