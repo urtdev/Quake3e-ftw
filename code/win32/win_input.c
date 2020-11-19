@@ -94,6 +94,8 @@ cvar_t	*in_lagged;
 cvar_t	*in_mouse;
 cvar_t  *in_logitechbug;
 
+cvar_t  *con_escape_mouse;
+
 #ifdef USE_JOYSTICK
 cvar_t	*in_joystick;
 cvar_t	*in_joyBallScale;
@@ -1153,6 +1155,11 @@ void IN_Init( void ) {
 	joy_threshold = Cvar_Get( "joy_threshold", "0.15", CVAR_ARCHIVE );
 #endif
 
+	con_escape_mouse = Cvar_Get( "con_escape_mouse", "1", CVAR_ARCHIVE);
+	Cvar_CheckRange(con_escape_mouse, "0", "1", CV_INTEGER);
+	Cvar_SetDescription(con_escape_mouse, "When set to 1 (Default) and r_fullscreen 0, the windows mouse cursor will be available.\n" \
+        "  0 will not show the Windows mouse cursor.");
+
 	// mouse variables
 	in_mouse = Cvar_Get ("in_mouse", "1", CVAR_ARCHIVE |CVAR_LATCH );
 	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
@@ -1231,11 +1238,18 @@ void IN_Frame( void ) {
 	if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
 		// temporarily deactivate if not in the game and
 		// running on the desktop with multimonitor configuration
-		
-		int mx, my;
-		// capture mouse button input from DI
-		IN_DIMouse(&mx, &my);
-		return;
+		if ( con_escape_mouse->integer == 1 && (!glw_state.cdsFullscreen || glw_state.monitorCount > 1) )
+		{
+			IN_DeactivateMouse();
+			//WIN_EnableAltTab();
+			//WIN_DisableHook();
+            return;
+		} else {
+            int mx, my;
+            // capture mouse button input from DI
+            IN_DIMouse(&mx, &my);
+            return;
+		}
 	}
 
 	if ( !gw_active || in_nograb->integer ) {
