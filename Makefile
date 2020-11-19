@@ -263,6 +263,10 @@ ifeq ($(USE_VULKAN_API),1)
   BASE_CFLAGS += -DUSE_VULKAN_API
 endif
 
+ifeq ($(USE_AUTH),1)
+  BASE_CFLAGS += -DUSE_AUTH
+endif
+
 ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
 endif
@@ -350,10 +354,6 @@ ifdef MINGW
   LDFLAGS += -lwsock32 -lgdi32 -lwinmm -lole32 -lws2_32 -lpsapi -lcomctl32
 
   CLIENT_LDFLAGS=$(LDFLAGS)
-
-  ifeq ($(USE_AUTH),1)
-      BASE_CFLAGS += -DUSE_AUTH
-  endif
 
   ifeq ($(USE_SDL),1)
     BASE_CFLAGS += -DUSE_LOCAL_HEADERS=1 -I$(MOUNT_DIR)/libsdl/windows/include/SDL2
