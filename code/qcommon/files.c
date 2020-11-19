@@ -5357,12 +5357,6 @@ void FS_InitFilesystem( void ) {
 	Com_StartupVariable( "fs_homepath" );
 	Com_StartupVariable( "fs_game" );
 
-//	#ifndef USE_AUTH
-//	// mickael9: AUTH system requires fs_game to be set
-//	if (!FS_FilenameCompare(Cvar_VariableString("fs_game"), fs_basegame->string))
-//		Cvar_Set("fs_game", "");
-//	#endif
-
 	Com_StartupVariable( "fs_basegame" );
 	Com_StartupVariable( "fs_copyfiles" );
 	Com_StartupVariable( "fs_restrict" );

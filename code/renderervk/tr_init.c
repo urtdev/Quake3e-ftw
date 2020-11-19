@@ -1696,7 +1696,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_renderWidth, "96", NULL, CV_INTEGER );
 	ri.Cvar_CheckRange( r_renderHeight, "72", NULL, CV_INTEGER );
 
-	r_renderScale = ri.Cvar_Get( "r_renderScale", "3", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_renderScale, "0", "4", CV_INTEGER );
 	ri.Cvar_SetDescription( r_renderScale, "Scaling mode to be used with custom render resolution:\n"
 		" 0 - disabled\n"
