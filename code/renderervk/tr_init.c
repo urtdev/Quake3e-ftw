@@ -1522,7 +1522,7 @@ static void R_Register( void )
     ri.Cvar_SetDescription(r_mapGreyScale, "Makes the map greyscale by desaturating the level textures.");
 
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE_ND | CVAR_LATCH );
-//    ri.Cvar_CheckRange(r_subdivisions, "1", "4", CV_INTEGER);
+    ri.Cvar_CheckRange(r_subdivisions, "1", "4", CV_INTEGER);
     ri.Cvar_SetDescription(r_subdivisions, "Set maximum level of detail. (an example would be the complexity of curves. 1=highest detail)");
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", XSTRING( MAX_POLYS ), CVAR_LATCH );
@@ -1532,8 +1532,15 @@ static void R_Register( void )
 	// archived variables that can change at any time
 	//
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE_ND | CVAR_CHEAT );
+	ri.Cvar_SetDescription(r_lodCurveError, "Determines how quickly polygons are pulled out with distance.");
+
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE_ND );
+	ri.Cvar_SetDescription(r_lodbias, "Level of visual detail, especially at distance. -2 Most detail, 2 Least.");
+
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE_ND );
+	ri.Cvar_CheckRange(r_flares, "0", "1", CV_INTEGER);
+	ri.Cvar_SetDescription(r_flares, "The r_flares show or not a flare effect around certain dynamic lights.");
+
 	r_znear = ri.Cvar_Get( "r_znear", "4", CVAR_CHEAT );
 	ri.Cvar_CheckRange( r_znear, "0.001", "200", CV_FLOAT );
 	r_zproj = ri.Cvar_Get( "r_zproj", "64", CVAR_ARCHIVE_ND );
@@ -1546,15 +1553,20 @@ static void R_Register( void )
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE );
 	ri.Cvar_CheckRange( r_dlightMode, "0", "2", CV_INTEGER );
 	ri.Cvar_SetDescription(r_dlightMode, "1 default dynamic lights | 2 - new per-pixel dynamic lights (Default)");
+
 	r_dlightScale = ri.Cvar_Get( "r_dlightScale", "0.5", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightScale, "0.1", "1", CV_FLOAT );
+
 	r_dlightIntensity = ri.Cvar_Get( "r_dlightIntensity", "1.0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightIntensity, "0.1", "1", CV_FLOAT );
 #endif // USE_PMLIGHT
 
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE_ND );
 	r_finish = ri.Cvar_Get( "r_finish", "0", CVAR_ARCHIVE_ND );
-	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
+	ri.Cvar_SetDescription(r_finish, "Toggle synchronization of rendered frames (Sync Every Frame).");
+
+	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINER_MIPMAP_LINEAR", CVAR_ARCHIVE );
+
 	r_gamma = ri.Cvar_Get( "r_gamma", "1", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_gamma, "0.5", "3", CV_FLOAT );
 	r_facePlaneCull = ri.Cvar_Get ("r_facePlaneCull", "1", CVAR_ARCHIVE_ND );
@@ -1662,7 +1674,7 @@ static void R_Register( void )
     ri.Cvar_CheckRange( r_hdr, "0", "1", CV_INTEGER );
 
 	r_bloom = ri.Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	ri.Cvar_SetDescription(r_hdr, "Enable High Dynamic Range. 1 to enable, 0 to disable (default).");
+	ri.Cvar_SetDescription(r_hdr, "Enable Bloom effect. 1 to enable, 0 to disable (default).");
 	ri.Cvar_CheckRange( r_bloom, "0", "1", CV_INTEGER );
 
 	r_bloom_threshold = ri.Cvar_Get( "r_bloom_threshold", "0.6", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -1684,7 +1696,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_renderWidth, "96", NULL, CV_INTEGER );
 	ri.Cvar_CheckRange( r_renderHeight, "72", NULL, CV_INTEGER );
 
-	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_renderScale = ri.Cvar_Get( "r_renderScale", "3", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_renderScale, "0", "4", CV_INTEGER );
 	ri.Cvar_SetDescription( r_renderScale, "Scaling mode to be used with custom render resolution:\n"
 		" 0 - disabled\n"
