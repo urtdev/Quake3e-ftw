@@ -28,6 +28,6 @@ build-linux-64bit-server:
     - BUILD_SERVER=1 make
   artifacts:
     paths:
-      - apt install -y make gcc libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev
+      - apt-get install -y make gcc libcurl4-openssl-dev mesa-common-dev libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev libsdl2-dev
       - build/release-linux-x86_64/quake3e*
       - ls -l build/release-linux-x86_64
