@@ -1,0 +1,32 @@
+stages:
+  - build
+
+build-windows-32bit-client:
+  stage: build
+  image: purplekarrot/mingw-w64-i686
+  script:
+    - BUILD_CLIENT=1 make
+    - ls -l build/release-mingw32-x86_64
+  artifacts:
+    paths:
+      - build/release-mingw32-x86_64/quake3e*
+
+build-windows-64bit-client:
+  stage: build
+  image: purplekarrot/mingw-w64-x86-64
+  script:
+    - BUILD_CLIENT=1 make
+    - ls -l build/release-mingw64-x86_64
+  artifacts:
+    paths:
+      - build/release-mingw64-x86_64/quake3e*
+
+build-linux-64bit-server:
+  stage: build
+  image: teeks99/clang-ubuntu:12
+  script:
+    - BUILD_SERVER=1 make
+  artifacts:
+    paths:
+      - build/release-linux-x86_64/quake3e*
+      - ls -l build/release-linux-x86_64

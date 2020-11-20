@@ -18,15 +18,15 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
   endif
 endif
 
-BUILD_CLIENT     = 0
-BUILD_SERVER     = 1
+#BUILD_CLIENT     = 1
+#BUILD_SERVER     = 1
 
 USE_SDL          = 0
 USE_CURL         = 1
 USE_LOCAL_HEADERS= 0
-USE_VULKAN       = 0
+USE_VULKAN       = 1
 USE_SYSTEM_JPEG  = 0
-USE_VULKAN_API   = 0
+USE_VULKAN_API   = 1
 USE_AUTH         = 1
 
 USE_RENDERER_DLOPEN = 1
