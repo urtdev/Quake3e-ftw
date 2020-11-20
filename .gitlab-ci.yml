@@ -13,7 +13,7 @@ build-windows-32bit-client:
 
 build-windows-64bit-client:
   stage: build
-  image: dockcross/windows-x64
+  image: mmozeiko/mingw-w64
   script:
     - make ARCH=x86_64 BUILD_CLIENT=1
     - ls -l build/release-mingw64-x86_64
@@ -25,11 +25,11 @@ build-linux-64bit-server:
   stage: build
   image: teeks99/clang-ubuntu:12
   script:
+    - sudo apt install make gcc libcurl4-openssl-dev mesa-common-dev
+    - sudo apt install libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev
+    - sudo apt install libsdl2-dev
     - BUILD_SERVER=1 make
+    - ls -l build/release-linux-x86_64
   artifacts:
     paths:
-      - sudo apt install make gcc libcurl4-openssl-dev mesa-common-dev
-      - sudo apt install libxxf86dga-dev libxrandr-dev libxxf86vm-dev libasound-dev
-      - sudo apt install libsdl2-dev
       - build/release-linux-x86_64/quake3e*
-      - ls -l build/release-linux-x86_64
