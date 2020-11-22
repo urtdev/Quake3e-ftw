@@ -1491,7 +1491,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange(r_neatsky, "0", "1", CV_INTEGER);
 	ri.Cvar_SetDescription(r_neatsky, "No picmip applied to skybox, 1 for higher quality skybox");
 
-	r_roundImagesDown = ri.Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_roundImagesDown = ri.Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_SetDescription(r_roundImagesDown, "set rounding down amount (larger = faster, lower quality)");
 
 	r_colorMipLevels = ri.Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH | CVAR_CHEAT );
@@ -1499,7 +1499,7 @@ static void R_Register( void )
 	ri.Cvar_SetDescription(r_colorMipLevels, "Developer aid to see texture mip usage");
 
 
-	r_detailTextures = ri.Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_detailTextures = ri.Cvar_Get( "r_detailtextures", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	ri.Cvar_CheckRange(r_detailTextures, "0", "1", CV_INTEGER);
 	ri.Cvar_SetDescription(r_detailTextures, "Enables the usage of detail texturing stages");
 
@@ -1534,7 +1534,7 @@ static void R_Register( void )
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE_ND | CVAR_CHEAT );
 	ri.Cvar_SetDescription(r_lodCurveError, "Determines how quickly polygons are pulled out with distance.");
 
-	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE_ND );
+	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription(r_lodbias, "Level of visual detail, especially at distance. -2 Most detail, 2 Least.");
 
 	r_flares = ri.Cvar_Get ("r_flares", "0", CVAR_ARCHIVE_ND );
@@ -1696,7 +1696,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_renderWidth, "96", NULL, CV_INTEGER );
 	ri.Cvar_CheckRange( r_renderHeight, "72", NULL, CV_INTEGER );
 
-	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ROM );
 	ri.Cvar_CheckRange( r_renderScale, "0", "4", CV_INTEGER );
 	ri.Cvar_SetDescription( r_renderScale, "Scaling mode to be used with custom render resolution:\n"
 		" 0 - disabled\n"
