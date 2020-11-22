@@ -825,8 +825,7 @@ void Con_DrawSolidConsole( float frac ) {
 	int				currentColor;
 	vec4_t			color = { 1, 0, 0, 1 };
 	vec4_t			color2 = { 1, 1, 1, 1 };
-	vec4_t          bgColor = { 0, 0, 0, 0.85f };
-	vec4_t			darkTextColour = { 0.25f, 0.25f, 0.25f, 1.0f };
+	vec4_t          bgColor = { 0.0f, 0.0f, 0.0f, 0.85f };
 	int totalOffset = 0;
 
 	lines = cls.glconfig.vidHeight * frac;
@@ -861,12 +860,12 @@ void Con_DrawSolidConsole( float frac ) {
 		if (currentCon == &consoles[i]) {
 			tabWidth = SCR_FontWidth(consoleNames[i], 0.24f) + 30;
 			tabHeight = 22;
-			color[3] = 1;
+			color[3] = 1.0f;
 		}
 		else {
 			tabWidth = SCR_FontWidth(consoleNames[i], 0.18f) + 18;
 			tabHeight = 18;
-			color[3] = 0.2;
+			color[3] = 0.2f;
 		}
 
 		// tab background

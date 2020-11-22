@@ -441,7 +441,6 @@ extern	cvar_t	*cl_mapAutoDownload;
 extern	cvar_t	*cl_dlDirectory;
 #endif
 extern	cvar_t	*cl_conXOffset;
-extern	cvar_t	*cl_conColor;
 extern	cvar_t	*cl_inGameVideo;
 
 extern	cvar_t	*cl_lanForcePackets;
