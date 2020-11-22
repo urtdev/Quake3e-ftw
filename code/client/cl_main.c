@@ -789,6 +789,12 @@ void CL_ReadDemoMessage( void ) {
 		return;
 	}
 
+	buf.cursize = LittleLong( buf.cursize );
+	if ( buf.cursize == -1 ) {
+		CL_DemoCompleted();
+		return;
+	}
+
 #ifdef USE_URT_DEMO
     if ( buf.cursize == 0 ) { // backward read gain the header demo /* holblin */
         CL_DemoCompleted ();
@@ -796,11 +802,6 @@ void CL_ReadDemoMessage( void ) {
     }
 #endif
 
-	buf.cursize = LittleLong( buf.cursize );
-	if ( buf.cursize == -1 ) {
-		CL_DemoCompleted();
-		return;
-	}
 	if ( buf.cursize > buf.maxsize ) {
 		Com_Error (ERR_DROP, "CL_ReadDemoMessage: demoMsglen > MAX_MSGLEN");
 	}
@@ -860,9 +861,13 @@ static int CL_WalkDemoExt( const char *arg, char *name, fileHandle_t *handle )
 	while ( demo_protocols[ i ] )
 	{
 #ifdef USE_URT_DEMO
-        Com_sprintf(name, MAX_OSPATH, "demos/%s.urtdemo", arg);
-#else
-        Com_sprintf(name, MAX_OSPATH, "demos/%s.dm_%d", arg, demo_protocols[i]);
+	    if (demo_protocols[i] == URT_PROTOCOL_VERSION) {
+	        Com_sprintf(name, MAX_OSPATH, "demos/%s.urtdemo", arg);
+	    } else {
+#endif
+            Com_sprintf(name, MAX_OSPATH, "demos/%s.dm_%d", arg, demo_protocols[i]);
+#ifdef USE_URT_DEMO
+        }
 #endif
 		FS_BypassPure();
 		FS_FOpenFileRead( name, handle, qtrue );
@@ -889,12 +894,24 @@ static qboolean CL_DemoNameCallback_f( const char *filename, int length )
 {
 	int version;
 
-	if ( length < 7 || Q_stricmpn( filename + length - 6, ".dm_", 4 ) )
+#ifdef USE_URT_DEMO
+	int isVersionUrT = Q_stricmpn( filename + length - 8, ".urtdemo", 8 );
+
+	if ( length < 9 && isVersionUrT ) {
+	    return qfalse;
+    }
+	else if ( isVersionUrT != 0 ) {
+#endif
+    if ( length < 7 || Q_stricmpn( filename + length - 6, ".dm_", 4 ) )
 		return qfalse;
 
-	version = atoi( filename + length - 2 );
-	if ( version < 66 || version > NEW_PROTOCOL_VERSION )
-		return qfalse;
+    version = atoi( filename + length - 2 );
+    if ( version < 66 || version > NEW_PROTOCOL_VERSION )
+        return qfalse;
+#ifdef USE_URT_DEMO
+	}
+#endif
+
 
 	return qtrue;
 }
@@ -912,7 +929,7 @@ static void CL_CompleteDemoName( char *args, int argNum )
 		FS_SetFilenameCallback( CL_DemoNameCallback_f );
         Field_CompleteFilename( "demos", ".dm_??", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
 #ifdef USE_URT_DEMO
-        Field_CompleteFilename( "demos", ".urtdemo", qfalse, FS_MATCH_ANY );
+        Field_CompleteFilename( "demos", ".urtdemo", qfalse, FS_MATCH_ANY | FS_MATCH_STICK );
 #endif
 		FS_SetFilenameCallback( NULL );
 	}
@@ -951,12 +968,11 @@ static void CL_PlayDemo_f( void ) {
 	// check for an extension .DEMOEXT_?? (?? is protocol)
 	// check for an extension .urtdemo
 
-    ext_test = strrchr(arg, '.');
+    ext_test = strrchr(arg, '.'); //dm_ demo
 
 #ifdef USE_URT_DEMO
-    if ( !strcmp(ext_test, ".urtdemo") || !strcmp(ext_test, ".URTDEMO") )
+    if ( ext_test && !Q_stricmpn(ext_test + 1, URTDEMOEXT, ARRAY_LEN(URTDEMOEXT) - 1) )
     {
-        Com_Printf("urtdemo\n");
         FS_BypassPure();
         FS_FOpenFileRead( name, &hFile, qtrue );
         FS_RestorePure();
@@ -986,7 +1002,7 @@ static void CL_PlayDemo_f( void ) {
 		{
 			size_t len;
 
-			Com_Printf("Protocol %d not supported for demos\n", protocol );
+			Com_Printf("Legacy: Protocol %d not supported for demos\n", protocol );
 			len = ext_test - arg;
 
 			if(len >= ARRAY_LEN(retry))
@@ -1033,9 +1049,6 @@ static void CL_PlayDemo_f( void ) {
 	Con_Close();
 
 #ifdef USE_URT_DEMO
-
-
-
     //@Barbatos: get the mod version from the server
 	//serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 	//s1 = Info_ValueForKey(serverInfo, "g_modversion");
@@ -1077,7 +1090,7 @@ static void CL_PlayDemo_f( void ) {
 	free(s2);
 
 	if ( v1 != v2 ){
-		Com_Printf("Protocol %d not supported for demos\n", v2);
+		Com_Printf("UrTDemo: Protocol %d not supported for demos\n", v2);
 		CL_DemoCompleted ();
 		return;
 	}

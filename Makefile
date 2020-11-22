@@ -21,13 +21,14 @@ endif
 #BUILD_CLIENT     = 1
 #BUILD_SERVER     = 1
 
-USE_SDL          = 0
-USE_CURL         = 1
-USE_LOCAL_HEADERS= 0
-USE_VULKAN       = 1
-USE_SYSTEM_JPEG  = 0
-USE_VULKAN_API   = 1
-USE_AUTH         = 1
+USE_SDL            = 0
+USE_CURL           = 1
+USE_LOCAL_HEADERS  = 0
+USE_VULKAN         = 1
+USE_SYSTEM_JPEG    = 0
+USE_VULKAN_API     = 1
+USE_AUTH           = 1
+USE_URT_DEMO = 1
 
 USE_RENDERER_DLOPEN = 1
 
@@ -265,6 +266,10 @@ endif
 
 ifeq ($(USE_AUTH),1)
   BASE_CFLAGS += -DUSE_AUTH
+endif
+
+ifeq ($(USE_URT_DEMO),1)
+  BASE_CFLAGS += -DUSE_URT_DEMO
 endif
 
 ifeq ($(GENERATE_DEPENDENCIES),1)
