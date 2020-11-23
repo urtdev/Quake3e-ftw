@@ -111,7 +111,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;USE_CURL;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;USE_CURL;USE_URT_DEMO;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>
       </BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -182,7 +182,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;USE_CURL;_WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;USE_CURL;USE_URT_DEMO;_WIN32;USE_SDL;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
@@ -226,6 +226,7 @@
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
+      <EnableUAC>false</EnableUAC>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -247,6 +248,7 @@
     <ClCompile Include="..\..\client\snd_codec_ogg.c" />
     <ClCompile Include="..\..\client\snd_codec_wav.c" />
     <ClCompile Include="..\..\client\snd_dma.c" />
+    <ClCompile Include="..\..\client\snd_dmahd.c" />
     <ClCompile Include="..\..\client\snd_main.c" />
     <ClCompile Include="..\..\client\snd_mem.c" />
     <ClCompile Include="..\..\client\snd_mix.c" />
@@ -316,6 +318,7 @@
     <ClInclude Include="..\..\client\cl_curl.h" />
     <ClInclude Include="..\..\client\keycodes.h" />
     <ClInclude Include="..\..\client\keys.h" />
+    <ClInclude Include="..\..\client\snd_dmahd.h" />
     <ClInclude Include="..\..\client\snd_local.h" />
     <ClInclude Include="..\..\client\snd_public.h" />
     <ClInclude Include="..\..\game\bg_public.h" />

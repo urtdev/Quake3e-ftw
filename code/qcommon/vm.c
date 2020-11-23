@@ -269,9 +269,9 @@ VM_Init
 ==============
 */
 void VM_Init( void ) {
-#ifndef DEDICATED
-	cvar_t* cv;
+    cvar_t* cv;
 
+#ifndef DEDICATED
 	cv= Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE | CVAR_PROTECTED );	// !@# SHIP WITH SET TO 2
     Cvar_SetDescription(cv, "Attempt to load the UI QVM and compile it to native assembly code\n2 - compile VM\n1 - interpreted VM\n0 - native VM using dynamic linking\nDefault: 2");
 

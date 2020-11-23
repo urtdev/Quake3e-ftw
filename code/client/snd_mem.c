@@ -34,6 +34,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define DEF_COMSOUNDMEGS "8"
 
+#include "snd_dmahd.h"
+
 /*
 ===============================================================================
 

@@ -4219,6 +4219,9 @@ void CL_Init( void ) {
     #endif
 
 	// userinfo
+#ifdef USE_FTWGL_TICKET
+	Cvar_Get("ticket", "", CVAR_USERINFO | CVAR_TEMP);
+#endif
     Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
     Cvar_Get ("rate", "32000", CVAR_USERINFO | CVAR_ARCHIVE );
     Cvar_Get ("snaps", "20", CVAR_USERINFO | CVAR_PROTECTED );

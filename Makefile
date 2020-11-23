@@ -28,7 +28,8 @@ USE_VULKAN         = 1
 USE_SYSTEM_JPEG    = 0
 USE_VULKAN_API     = 1
 USE_AUTH           = 1
-USE_URT_DEMO = 1
+USE_URT_DEMO       = 1
+NO_DMAHD           = 0
 
 USE_RENDERER_DLOPEN = 1
 
@@ -270,6 +271,10 @@ endif
 
 ifeq ($(USE_URT_DEMO),1)
   BASE_CFLAGS += -DUSE_URT_DEMO
+endif
+
+ifeq ($(NO_DMAHD),1)
+  BASE_CFLAGS += -DNO_DMAHD
 endif
 
 ifeq ($(GENERATE_DEPENDENCIES),1)
@@ -847,6 +852,7 @@ Q3OBJ = \
   \
   $(B)/client/snd_adpcm.o \
   $(B)/client/snd_dma.o \
+  $(B)/client/snd_dmahd.o \
   $(B)/client/snd_mem.o \
   $(B)/client/snd_mix.o \
   $(B)/client/snd_wavelet.o \

@@ -1112,6 +1112,10 @@ void Snd_Memset( void* dest, const int val, const size_t count )
 	Com_Memset( dest, val, count );
 }
 
+#ifndef NO_DMAHD
+qboolean dmaHD_Enabled(void);
+#endif
+
 qboolean SNDDMA_Init( void )
 {
 	cvar_t *sndbits;
@@ -1182,6 +1186,16 @@ qboolean SNDDMA_Init( void )
 	dma.channels = (int)sndchannels->value;
 	if (dma.channels < 1 || dma.channels > 2)
 		dma.channels = 2;
+
+#ifndef NO_DMAHD
+    if (dmaHD_Enabled())
+    {
+        // p5yc0runn3r - Fix dmaHD sound to 44KHz, Stereo and 16 bits per sample.
+        dma.speed = 44100;
+        dma.channels = 2;
+        dma.samplebits = 16;
+    }
+#endif
 
 	/*  mmap() call moved forward */
 

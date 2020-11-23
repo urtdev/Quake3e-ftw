@@ -33,8 +33,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "snd_codec.h"
 #include "client.h"
 
+#include "snd_dmahd.h"
+
 static void S_Update_( void );
-static void S_UpdateBackgroundTrack( void );
+void S_UpdateBackgroundTrack( void );
 static void S_Base_StopAllSounds( void );
 static void S_Base_StopBackgroundTrack( void );
 
@@ -62,12 +64,12 @@ channel_t   s_channels[MAX_CHANNELS];
 channel_t   loop_channels[MAX_CHANNELS];
 int			numLoopChannels;
 
-static		qboolean	s_soundStarted;
-static		qboolean	s_soundMuted;
+qboolean	s_soundStarted;
+qboolean	s_soundMuted;
 
 dma_t		dma;
 
-static int			listener_number;
+int			listener_number;
 static vec3_t		listener_origin;
 static vec3_t		listener_axis[3];
 
@@ -92,7 +94,7 @@ cvar_t		*s_mixPreStep;
 cvar_t		*s_device;
 #endif
 
-static loopSound_t	loopSounds[MAX_GENTITIES];
+loopSound_t	loopSounds[MAX_GENTITIES];
 static	channel_t	*freelist = NULL;
 
 int			s_rawend;
@@ -1138,7 +1140,7 @@ void S_Base_Update( void ) {
 }
 
 
-static void S_GetSoundtime( void )
+void S_GetSoundtime( void )
 {
 	int		samplepos;
 	static	int		buffers;
@@ -1332,7 +1334,7 @@ static void S_Base_StartBackgroundTrack( const char *intro, const char *loop ){
 S_UpdateBackgroundTrack
 ======================
 */
-static void S_UpdateBackgroundTrack( void ) {
+void S_UpdateBackgroundTrack( void ) {
 	int		bufferSamples;
 	int		fileSamples;
 	byte	raw[30000];		// just enough to fit in a mac stack frame
