@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define Q3_VERSION            "FTWGL"
 #ifndef SVN_VERSION
-  #define SVN_VERSION Q3_VERSIONsv
+  #define SVN_VERSION Q3_VERSION
 #endif
 #define CLIENT_WINDOW_TITLE   "FTWGL: Urban Terror"
 #define CONSOLE_WINDOW_TITLE  "FTWGL: UrT"
