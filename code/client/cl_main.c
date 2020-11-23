@@ -973,6 +973,7 @@ static void CL_PlayDemo_f( void ) {
 #ifdef USE_URT_DEMO
     if ( ext_test && !Q_stricmpn(ext_test + 1, URTDEMOEXT, ARRAY_LEN(URTDEMOEXT) - 1) )
     {
+        Com_sprintf(name, sizeof(name), "demos/%s", arg);
         FS_BypassPure();
         FS_FOpenFileRead( name, &hFile, qtrue );
         FS_RestorePure();
