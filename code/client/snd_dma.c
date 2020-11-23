@@ -1480,10 +1480,15 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		return qfalse;
 	}
 
-	s_khz = Cvar_Get( "s_khz", "22", CVAR_ARCHIVE_ND | CVAR_LATCH );
+#ifndef NO_DMAHD
+    s_khz = Cvar_Get ("s_khz", "44", CVAR_ARCHIVE);
+#else
+    s_khz = Cvar_Get ("s_khz", "22", CVAR_ARCHIVE);
+#endif
 	Cvar_CheckRange( s_khz, "0", "48", CV_INTEGER );
+    Cvar_SetDescription( s_khz, "Set the sampling frequency of sounds\nlower=performance higher=quality\nDefault: 22" );
 
-	switch( s_khz->integer ) {
+    switch( s_khz->integer ) {
 		case 48:
 		case 44:
 		case 22:
@@ -1498,9 +1503,17 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	}
 
 	s_mixahead = Cvar_Get( "s_mixahead", "0.2", CVAR_ARCHIVE );
-	s_mixPreStep = Cvar_Get( "s_mixPreStep", "0.05", CVAR_ARCHIVE );
-	s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
-	s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
+    Cvar_SetDescription(s_mixahead, "Mix sounds together because they are used to reduce skipping\nDefault: 0.2 seconds");
+
+    s_mixPreStep = Cvar_Get( "s_mixPreStep", "0.05", CVAR_ARCHIVE );
+    Cvar_SetDescription(s_mixPreStep, "Mix sounds ahead of time to prevent delays while loading\nDefault: 0.05");
+
+    s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
+    Cvar_SetDescription(s_show, "Display filenames of sounds while they are being played\nDefault: 0");
+
+    s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
+    Cvar_SetDescription(s_testsound, "Toggle a test tone to test sound system\nDefault: 0" );
+
 #if defined(__linux__) && !defined(USE_SDL)
 	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_SetDescription( s_device, "Set ALSA output device\n"
@@ -1554,6 +1567,10 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	si->ClearSoundBuffer = S_Base_ClearSoundBuffer;
 	si->SoundInfo = S_Base_SoundInfo;
 	si->SoundList = S_Base_SoundList;
+
+#ifndef NO_DMAHD
+    if (dmaHD_Enabled()) return dmaHD_Init(si);
+#endif
 
 	return qtrue;
 }

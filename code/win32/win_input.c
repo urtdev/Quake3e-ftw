@@ -1170,7 +1170,9 @@ void IN_Init( void ) {
 		" -1 - win32 mouse" );
 		
 	in_nograb = Cvar_Get( "in_nograb", "0", 0 );
-	in_lagged = Cvar_Get( "in_lagged", "0", 0 );
+    Cvar_SetDescription(in_nograb, "Don't grab mouse when client in not in fullscreen mode\nDefault: 0");
+
+    in_lagged = Cvar_Get( "in_lagged", "0", 0 );
 	Cvar_SetDescription( in_lagged, 
 		"Mouse movement processing order:\n" \
 		" 0 - before rendering\n" \

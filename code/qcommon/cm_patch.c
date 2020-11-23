@@ -1346,8 +1346,9 @@ void CM_TracePointThroughPatchCollide( traceWork_t *tw, const struct patchCollid
 			// we hit this facet
 #ifndef BSPC
 			if (!cv) {
-				cv = Cvar_Get( "r_debugSurfaceUpdate", "1", 0 );
-			}
+				cv = Cvar_Get("r_debugSurfaceUpdate", "1", 0);
+                Cvar_SetDescription( cv, "Update surface shapes in debug mode\nDefault: 1" );
+            }
 			if (cv->integer) {
 				debugPatchCollide = pc;
 				debugFacet = facet;
@@ -1536,7 +1537,8 @@ void CM_TraceThroughPatchCollide( traceWork_t *tw, const struct patchCollide_s *
 #ifndef BSPC
 				if (!cv) {
 					cv = Cvar_Get( "r_debugSurfaceUpdate", "1", 0 );
-				}
+                    Cvar_SetDescription( cv, "Update surface shapes in debug mode\nDefault: 1" );
+                }
 				if (cv && cv->integer) {
 					debugPatchCollide = pc;
 					debugFacet = facet;
@@ -1687,7 +1689,8 @@ void CM_DrawDebugSurface( void (*drawPoly)(int color, int numPoints, float *poin
 	if ( !cv2 )
 	{
 		cv2 = Cvar_Get( "r_debugSurface", "0", 0 );
-	}
+        Cvar_SetDescription( cv2, "Debug surface shapes\nDefault: 0" );
+    }
 
 	if (cv2->integer != 1)
 	{
@@ -1703,7 +1706,8 @@ void CM_DrawDebugSurface( void (*drawPoly)(int color, int numPoints, float *poin
 #ifndef BSPC
 	if ( !cv ) {
 		cv = Cvar_Get( "cm_debugSize", "2", 0 );
-	}
+        Cvar_SetDescription( cv, "Size of surface debug area\nDefault: 2" );
+    }
 #endif
 	pc = debugPatchCollide;
 

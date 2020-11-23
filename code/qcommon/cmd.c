@@ -397,6 +397,7 @@ typedef struct cmd_function_s
 {
 	struct cmd_function_s	*next;
 	char					*name;
+    char					*description;
 	xcommand_t				function;
 	completionFunc_t	complete;
 } cmd_function_t;
@@ -708,10 +709,81 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	// use a small malloc to avoid zone fragmentation
 	cmd = S_Malloc( sizeof( *cmd ) );
 	cmd->name = CopyString( cmd_name );
+    cmd->description = NULL;
 	cmd->function = function;
 	cmd->complete = NULL;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
+}
+
+/*
+=====================
+Cmd_SetDescription
+=====================
+*/
+void Cmd_SetDescription( const char *cmd_name, char *cmd_description )
+{
+    cmd_function_t *cmd = Cmd_FindCommand( cmd_name );
+    if(!cmd) return;
+
+    if( cmd_description && cmd_description[0] != '\0' )
+    {
+        if( cmd->description != NULL )
+        {
+            Z_Free( cmd->description );
+        }
+        cmd->description = CopyString( cmd_description );
+    }
+}
+
+
+/*
+============
+Cmd_Help
+Prints the value, default, and latched string of the given variable
+============
+*/
+static void Cmd_Help( const cmd_function_t *cmd ) {
+    Com_Printf ("\"%s\" " S_COLOR_WHITE "",
+                cmd->name );
+
+    Com_Printf (" autocomplete:\"%s" S_COLOR_WHITE "\"",
+                cmd->complete ? "yes" : "no" );
+
+    Com_Printf ("\n");
+
+    if ( cmd->description ) {
+        Com_Printf( "%s\n", cmd->description );
+    }
+}
+
+
+/*
+============
+Cmd_Help_f
+Prints the contents of a cvar
+(preferred over Cvar_Command where cvar names and commands conflict)
+============
+*/
+static void Cmd_Help_f( void )
+{
+    char *name;
+    cmd_function_t *cmd;
+
+    if(Cmd_Argc() != 2)
+    {
+        Com_Printf ("usage: help <command>\n");
+        return;
+    }
+
+    name = Cmd_Argv(1);
+
+    cmd = Cmd_FindCommand( name );
+
+    if(cmd)
+        Cmd_Help(cmd);
+    else
+        Com_Printf ("Command %s does not exist.\n", name);
 }
 
 
@@ -752,6 +824,9 @@ void Cmd_RemoveCommand( const char *cmd_name ) {
 			if (cmd->name) {
 				Z_Free(cmd->name);
 			}
+            if (cmd->description) {
+                Z_Free(cmd->description);
+            }
 			Z_Free (cmd);
 			return;
 		}
@@ -970,14 +1045,29 @@ Cmd_Init
 */
 void Cmd_Init( void ) {
 	Cmd_AddCommand ("cmdlist",Cmd_List_f);
-	Cmd_AddCommand ("exec",Cmd_Exec_f);
-	Cmd_AddCommand ("execq",Cmd_Exec_f);
-	Cmd_SetCommandCompletionFunc( "exec", Cmd_CompleteCfgName );
+    Cmd_SetDescription("cmdlist", "List all available console commands\nusage: cmdlist");
+
+    Cmd_AddCommand ("exec",Cmd_Exec_f);
+    Cmd_SetDescription("exec", "Execute a config file or script\nusage: exec <configfile>");
+    Cmd_SetCommandCompletionFunc( "exec", Cmd_CompleteCfgName );
+
+    Cmd_AddCommand ("execq",Cmd_Exec_f);
+    Cmd_SetDescription("exec", "Quietly execute a config file or script\nusage: execq <configfile>");
 	Cmd_SetCommandCompletionFunc( "execq", Cmd_CompleteCfgName );
+
 	Cmd_AddCommand ("vstr",Cmd_Vstr_f);
+    Cmd_SetDescription("vstr", "Identifies the attached command as a variable string\nusage: vstr <variable>");
+
     Cmd_AddCommand ("+vstr",Cmd_PVstr_f);
     Cmd_AddCommand ("-vstr",Cmd_PVstr_f);
 	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
-	Cmd_AddCommand ("wait", Cmd_Wait_f);
+    Cmd_SetDescription( "echo", "Echo a string to the message display to your console only\nusage: echo <message>");
+
+    Cmd_AddCommand ("wait", Cmd_Wait_f);
+    Cmd_SetDescription( "wait", "Stop execution and wait one game tick\nusage: wait (<# ticks> optional)" );
+
+    Cmd_SetDescription( "wait", "Stop execution and wait one game tick\nusage: wait (<# ticks> optional)" );
+    Cmd_AddCommand ("help", Cmd_Help_f);
+    Cmd_SetDescription("help", "usage: help <command>");
 }

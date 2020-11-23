@@ -26,43 +26,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define  DEFAULT_CONSOLE_WIDTH 78
 #define  MAX_CONSOLE_WIDTH 120
 
-#define  NUM_CON_TIMES  4
-
-#define  CON_TEXTSIZE   65536
-
 int bigchar_width;
 int bigchar_height;
 int smallchar_width;
 int smallchar_height;
-
-typedef struct {
-	qboolean	initialized;
-
-	short	text[CON_TEXTSIZE];
-	int		current;		// line where next message will be printed
-	int		x;				// offset in current line for next print
-	int		display;		// bottom of console displays this line
-
-	int 	linewidth;		// characters across screen
-	int		totallines;		// total lines in console scrollback
-
-	float	xadjust;		// for wide aspect screens
-
-	float	displayFrac;	// aproaches finalFrac at scr_conspeed
-	float	finalFrac;		// 0.0 to 1.0 lines of console to display
-
-	int		vislines;		// in scanlines
-
-	int		times[NUM_CON_TIMES];	// cls.realtime time the line was generated
-								// for transparent notify lines
-	vec4_t	color;
-
-	int		viswidth;
-	int		vispage;		
-
-	qboolean newline;
-
-} console_t;
 
 #define CONSOLE_ALL 0
 #define CONSOLE_GENERAL 1
@@ -419,20 +386,37 @@ Con_Init
 void Con_Init( void ) 
 {
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0 );
-	con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
+    Cvar_SetDescription( con_notifytime, "Defines how long messages (from players or the system) are on the screen\nDefault: 3 seconds" );
+
+    con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
+    Cvar_SetDescription( con_conspeed, "Set how fast the console goes up and down\nDefault: 3 seconds" );
+
     con_timestamp = Cvar_Get( "con_timestamp", "1", CVAR_ARCHIVE );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
 
 	Cmd_AddCommand( "clear", Con_Clear_f );
-	Cmd_AddCommand( "condump", Con_Dump_f );
+    Cmd_SetDescription("clear", "Clear all text from console\nUsage: clear");
+
+    Cmd_AddCommand( "condump", Con_Dump_f );
 	Cmd_SetCommandCompletionFunc( "condump", Cmd_CompleteTxtName );
-	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
-	Cmd_AddCommand( "messagemode", Con_MessageMode_f );
-	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );
-	Cmd_AddCommand( "messagemode3", Con_MessageMode3_f );
-	Cmd_AddCommand( "messagemode4", Con_MessageMode4_f );
+    Cmd_SetDescription("condump", "Write the console text to a file\nUsage: condump <file>");
+
+    Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f );
+    Cmd_SetDescription("toggleconsole", "Usually bound to ~ the tilde key brings the console up and down\nUsage: bind <key> toggleconsole");
+
+    Cmd_AddCommand( "messagemode", Con_MessageMode_f );
+    Cmd_SetDescription("messagemode", "Send a message to everyone");
+
+    Cmd_AddCommand( "messagemode2", Con_MessageMode2_f );
+    Cmd_SetDescription("messagemode2", "Send a message to teammates");
+
+    Cmd_AddCommand( "messagemode3", Con_MessageMode3_f );
+    Cmd_SetDescription("messagemode3", "Send a message to targeted player");
+
+    Cmd_AddCommand( "messagemode4", Con_MessageMode4_f );
+    Cmd_SetDescription("messagemode4", "Send a message to last attacker");
 }
 
 

@@ -2077,6 +2077,7 @@ static void Com_InitZoneMemory( void ) {
 	// allocate the random block zone
 	cv = Cvar_Get( "com_zoneMegs", XSTRING( DEF_COMZONEMEGS ), CVAR_LATCH | CVAR_ARCHIVE );
 	Cvar_CheckRange( cv, "1", NULL, CV_INTEGER );
+    Cvar_SetDescription(cv, "Set zoneMegs on the command line, the maximum size for each zone\nDefault: 25");
 
 #ifndef USE_MULTI_SEGMENT
 	if ( cv->integer < DEF_COMZONEMEGS )
@@ -3566,6 +3567,7 @@ void Com_Init( char *commandLine ) {
 
 #if defined(_WIN32) && defined(_DEBUG)
 	com_noErrorInterrupt = Cvar_Get( "com_noErrorInterrupt", "0", 0 );
+    Cvar_SetDescription(com_noErrorInterrupt, "No interrupt with a debug break when an error occurs\nDefault: 0");
 #endif
 
 #ifdef DEFAULT_GAME
@@ -3589,8 +3591,10 @@ void Com_Init( char *commandLine ) {
 	Com_StartupVariable( "developer" );
 	com_developer = Cvar_Get( "developer", "0", CVAR_TEMP );
 	Cvar_CheckRange( com_developer, NULL, NULL, CV_INTEGER );
+    Cvar_SetDescription(com_developer, "Set developer mode that includes extra logging information\nDefault: 0");
 
-	Com_StartupVariable( "vm_rtChecks" );
+
+    Com_StartupVariable( "vm_rtChecks" );
 	vm_rtChecks = Cvar_Get( "vm_rtChecks", "15", CVAR_INIT | CVAR_PROTECTED );
 	Cvar_CheckRange( vm_rtChecks, "0", "15", CV_INTEGER );
 	Cvar_SetDescription( vm_rtChecks, 
@@ -3600,8 +3604,9 @@ void Com_Init( char *commandLine ) {
 	Com_StartupVariable( "journal" );
 	com_journal = Cvar_Get( "journal", "0", CVAR_INIT | CVAR_PROTECTED );
 	Cvar_CheckRange( com_journal, "0", "2", CV_INTEGER );
+    Cvar_SetDescription(com_journal, "Use a detailed journal.dat file for many events\nDefault: 0");
 
-	// done early so bind command exists
+    // done early so bind command exists
 	Com_InitKeyCommands();
 
 	FS_InitFilesystem();
@@ -3617,9 +3622,11 @@ void Com_Init( char *commandLine ) {
 #ifdef DEDICATED
 	com_dedicated = Cvar_Get( "dedicated", "1", CVAR_INIT );
 	Cvar_CheckRange( com_dedicated, "1", "2", CV_INTEGER );
+    Cvar_SetDescription( com_dedicated, "Start a server in dedicated mode, no graphics or gameplay, only server process\n1 - Server is dedicated and unlisted\n2 - Server is public and updated in master list\nDefault: 1" );
 #else
 	com_dedicated = Cvar_Get( "dedicated", "0", CVAR_LATCH );
 	Cvar_CheckRange( com_dedicated, "0", "2", CV_INTEGER );
+    Cvar_SetDescription( com_dedicated, "Start a server in dedicated mode, no graphics or gameplay, only server process\n1 - Server is dedicated and unlisted\n2 - Server is public and updated in master list\nDefault: 0" );
 #endif
 	// allocate the stack based hunk allocator
 	Com_InitHunkMemory();
@@ -3633,21 +3640,27 @@ void Com_Init( char *commandLine ) {
 	//
 #ifndef DEDICATED
 	com_maxfps = Cvar_Get( "com_maxfps", "125", CVAR_PROTECTED); // try to force that in some light way
-	com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "0", CVAR_ARCHIVE_ND );
+    com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( com_maxfps, "0", "1000", CV_INTEGER );
 	Cvar_CheckRange( com_maxfpsUnfocused, "0", "1000", CV_INTEGER );
+    Cvar_SetDescription(com_maxfps, "Set the max number of frames per second across the whole system, client and server\nDefault: 125");
+    Cvar_SetDescription(com_maxfpsUnfocused, "Set the max number of frames per second when the client is minimized or not in the background\nDefault: 60");
+
 	com_yieldCPU = Cvar_Get( "com_yieldCPU", "1", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( com_yieldCPU, "0", "16", CV_INTEGER );
+    Cvar_CheckRange( com_yieldCPU, "0", "16", CV_INTEGER );
+    Cvar_SetDescription(com_yieldCPU, "Use CPU yield inbetween frames to allow other background processes to run (more efficient)\nDefault: 1");
 #endif
 
 #ifdef USE_AFFINITY_MASK
 	com_affinityMask = Cvar_Get( "com_affinityMask", "0", CVAR_ARCHIVE_ND );
 	com_affinityMask->modified = qfalse;
+    Cvar_SetDescription(com_affinityMask, "Set the processor affinity for multi-CPU systems\nDefault: 0");
 #endif
 
 	com_blood = Cvar_Get ("com_blood", "1", CVAR_ARCHIVE_ND );
+    Cvar_SetDescription(com_blood, "Toggle the blood mist effect in gib animations\nDefault: 1");
 
-	com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
+    com_logfile = Cvar_Get( "logfile", "0", CVAR_TEMP );
 	Cvar_CheckRange( com_logfile, "0", "4", CV_INTEGER );
 	Cvar_SetDescription( com_logfile, "System console logging:\n"
 		" 0 - disabled\n"
@@ -3658,31 +3671,59 @@ void Com_Init( char *commandLine ) {
 
 	com_timescale = Cvar_Get( "timescale", "1", CVAR_CHEAT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( com_timescale, "0", NULL, CV_FLOAT );
-	com_fixedtime = Cvar_Get ("fixedtime", "0", CVAR_CHEAT);
-	com_showtrace = Cvar_Get ("com_showtrace", "0", CVAR_CHEAT);
-	com_viewlog = Cvar_Get( "viewlog", "0", 0 );
-	com_speeds = Cvar_Get ("com_speeds", "0", 0);
-	com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
+    Cvar_SetDescription(com_timescale, "Set the ratio between game time and real time\nDefault: 1");
+
+    com_fixedtime = Cvar_Get ("fixedtime", "0", CVAR_CHEAT);
+    Cvar_SetDescription(com_fixedtime, "Toggle the rendering of each frame completely, before sending the next frame\nDefault: 0");
+
+    com_showtrace = Cvar_Get ("com_showtrace", "0", CVAR_CHEAT);
+    Cvar_SetDescription(com_showtrace, "Toggle the display of packet tracing\nDefault: 0");
+
+    com_viewlog = Cvar_Get( "viewlog", "0", 0 );
+    Cvar_SetDescription(com_viewlog, "Toggle the display of the startup console window over the game screen\nDefault: 0");
+
+    com_speeds = Cvar_Get ("com_speeds", "0", 0);
+    Cvar_SetDescription(com_speeds, "Toggle display of frame counter, all, sv, cl, gm\nDefault: 0");
+
+    com_cameraMode = Cvar_Get ("com_cameraMode", "0", CVAR_CHEAT);
+    Cvar_SetDescription(com_cameraMode, "Toggle the view of your player model off and on when in 3D camera view\nDefault: 0");
 
 #ifndef DEDICATED	
 	com_timedemo = Cvar_Get( "timedemo", "0", 0 );
-	Cvar_CheckRange( com_timedemo, "0", "1", CV_INTEGER );
+    Cvar_SetDescription(com_timedemo, "Times a demo and returns frames per second like a benchmark\nDefault: 0");
+    Cvar_CheckRange( com_timedemo, "0", "1", CV_INTEGER );
+
 	cl_paused = Cvar_Get ("cl_paused", "0", CVAR_ROM);
-	cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
-	com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
+    Cvar_SetDescription(cl_paused, "Holds the status of the paused flag on the client side\nDefault: 0");
+
+    cl_packetdelay = Cvar_Get ("cl_packetdelay", "0", CVAR_CHEAT);
+    Cvar_SetDescription(cl_packetdelay, "Stream network packets to the server instead of trying to send immediately\nDefault: 0");
+
+    com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
+    Cvar_SetDescription( com_cl_running, "Shows whether or not a client game is running or weather we are in server/client mode\nDefault: 0");
+
 #endif
 
 	sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);
-	sv_packetdelay = Cvar_Get ("sv_packetdelay", "0", CVAR_CHEAT);
-	com_sv_running = Cvar_Get ("sv_running", "0", CVAR_ROM);
+    Cvar_SetDescription(sv_paused, "Holds the status of the paused flag on the server side\nDefault: 0");
 
-	com_buildScript = Cvar_Get( "com_buildScript", "0", 0 );
+    sv_packetdelay = Cvar_Get ("sv_packetdelay", "0", CVAR_CHEAT);
+    Cvar_SetDescription(sv_packetdelay, "Stream network packets to the client instead of sending immediately\nDefault: 0");
 
-	Cvar_Get( "com_errorMessage", "", CVAR_ROM | CVAR_NORESTART );
+    com_sv_running = Cvar_Get ("sv_running", "0", CVAR_ROM);
+    Cvar_SetDescription( com_sv_running, "Variable flag tells the console weather or not a local server is running\nDefault: 0" );
+
+    com_buildScript = Cvar_Get( "com_buildScript", "0", 0 );
+    Cvar_SetDescription( com_buildScript, "Set whether the game is being automated as a part of test build script\nDefault: 0" );
+
+    Cvar_Get( "com_errorMessage", "", CVAR_ROM | CVAR_NORESTART );
 
 #ifndef DEDICATED
 	com_introPlayed = Cvar_Get( "com_introplayed", "0", CVAR_ARCHIVE );
+    Cvar_SetDescription( com_introPlayed, "Toggle displaying of intro cinematic once it has been seen this variable keeps it from playing each time\nDefault: 0" );
 	com_skipIdLogo  = Cvar_Get( "com_skipIdLogo", "0", CVAR_ARCHIVE );
+    Cvar_SetDescription(com_skipIdLogo, "Toggle skip playing the intro logo cinematic for the game\nDefault: 0");
+
 #endif
 
 	if ( com_dedicated->integer ) {
@@ -3697,8 +3738,11 @@ void Com_Init( char *commandLine ) {
 	if ( com_developer->integer ) {
 		Cmd_AddCommand( "error", Com_Error_f );
 		Cmd_AddCommand( "crash", Com_Crash_f );
-		Cmd_AddCommand( "freeze", Com_Freeze_f );
-	}
+        Cmd_SetDescription( "error", "Create an artificial crash for testing\nusage: crash" );
+
+        Cmd_AddCommand( "freeze", Com_Freeze_f );
+        Cmd_SetDescription( "freeze", "Create an artificial freeze for testing\nusage: freeze" );
+    }
 
 	Cmd_AddCommand( "quit", Com_Quit_f );
 	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
@@ -3708,8 +3752,9 @@ void Com_Init( char *commandLine ) {
 
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
+    Cvar_SetDescription(com_version, "Set the engine verion so it can be distinguished from similar clients");
 
-	// this cvar is the single entry point of the entire extension system
+    // this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM );
 
 	Sys_Init();

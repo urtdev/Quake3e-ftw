@@ -23,12 +23,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../client/client.h"
 #include "../qcommon/qcommon.h"
+#ifdef USE_SENTRY
+//#define SENTRY_BUILD_STATIC 1
+#include "../sentry/include/sentry.h"
+#endif
 #include "win_local.h"
 #include "glw_win.h"
 #include "resource.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <direct.h>
+
+#ifdef USE_SENTRY
+#define sleep_s(SECONDS) Sleep((SECONDS)*1000)
+#endif
 
 #define MEM_THRESHOLD (96*1024*1024)
 
@@ -64,6 +72,11 @@ Show the early console as an error dialog
 =============
 */
 void QDECL Sys_Error( const char *error, ... ) {
+#ifdef USE_SENTRY
+    const char *logger = "Sys_Error";
+    sentry_capture_event(sentry_value_new_message_event(SENTRY_LEVEL_ERROR, logger, error));
+#endif
+
 	va_list	argptr;
 	char	text[4096];
 	MSG		msg;
@@ -71,6 +84,10 @@ void QDECL Sys_Error( const char *error, ... ) {
 	va_start( argptr, error );
 	Q_vsnprintf( text, sizeof( text ), error, argptr );
 	va_end( argptr );
+
+#ifdef USE_SENTRY
+	sentry_shutdown();
+#endif
 
 #ifndef DEDICATED
 	CL_Shutdown( text, qtrue );
@@ -84,7 +101,7 @@ void QDECL Sys_Error( const char *error, ... ) {
 
 	timeEndPeriod( 1 );
 
-	// wait for the user to quit
+    // wait for the user to quit
 	while ( 1 ) {
 		if ( GetMessage( &msg, NULL, 0, 0 ) <= 0 ) {
 			Cmd_Clear();
@@ -94,7 +111,7 @@ void QDECL Sys_Error( const char *error, ... ) {
 		DispatchMessage( &msg );
 	}
 
-	Sys_DestroyConsole();
+    Sys_DestroyConsole();
 
 	exit( 1 );
 }
@@ -107,9 +124,14 @@ Sys_Quit
 */
 void Sys_Quit( void ) {
 
+#ifdef USE_SENTRY
+	sentry_shutdown();
+#endif
+
 	timeEndPeriod( 1 );
 
 	Sys_DestroyConsole();
+
 	exit( 0 );
 }
 
@@ -601,6 +623,14 @@ are initialized
 ================
 */
 void Sys_Init( void ) {
+#ifdef USE_SENTRY
+    sentry_options_t *options = sentry_options_new();
+    sentry_options_set_dsn(options, "https://7c897904b5194675a86f4263fe5fb8eb@o479973.ingest.sentry.io/5525876");
+    sentry_options_set_release(options, SVN_VERSION);
+    sentry_init(options);
+
+//	sentry_capture_event(sentry_value_new_message_event(SENTRY_LEVEL_DEBUG, "Sys_Init", "Client Launched"));
+#endif
 
 	// make sure the timer is high precision, otherwise
 	// NT gets 18ms resolution

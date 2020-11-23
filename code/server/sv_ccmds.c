@@ -2006,46 +2006,92 @@ void SV_AddOperatorCommands( void ) {
 	initialized = qtrue;
 
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
-	Cmd_AddCommand ("kick", SV_Kick_f);
+    Cmd_SetDescription( "heartbeat", "Send a manual heartbeat to the master servers\nusage: heartbeat" );
+
+    Cmd_AddCommand ("kick", SV_Kick_f);
+    Cmd_SetDescription( "kick", "Kick the player with the given name off the server\nusag: kick <playername>" );
+
 #ifndef STANDALONE
 #ifdef USE_BANS
 	if(!Cvar_VariableIntegerValue("com_standalone"))
 	{
 		Cmd_AddCommand ("banUser", SV_Ban_f);
+        Cmd_SetDescription( "banUser", "Ban a client by their player name\nusage: banUser <playername>" );
+
 		Cmd_AddCommand ("banClient", SV_BanNum_f);
+        Cmd_SetDescription( "banClient", "Ban a client by their slot number\nusage: banClient <slot #>" );
 	}
 #endif
 #endif
 	Cmd_AddCommand ("clientkick", SV_KickNum_f);
-	Cmd_AddCommand ("status", SV_Status_f);
-	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
-	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
-	Cmd_AddCommand ("sectorlist", SV_SectorList_f);
-	Cmd_AddCommand ("map", SV_Map_f);
+    Cmd_SetDescription( "clientkick", "Kick a client by slot number used\nusage: clientkick <slot #>" );
+
+    Cmd_AddCommand ("status", SV_Status_f);
+    Cmd_SetDescription( "status", "Show status of the currently connected server\nusage: status" );
+
+    Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
+    Cmd_SetDescription( "dumpuser", "Display user info (handicap, model/color, rail color, more)\nusage: dumpuser <playername>");
+
+    Cmd_AddCommand ("map_restart", SV_MapRestart_f);
+    Cmd_SetDescription( "map_restart", "Resets the game on the same map\nusage: map_restart" );
+
+    Cmd_AddCommand ("sectorlist", SV_SectorList_f);
+    Cmd_SetDescription( "sectorlist", "Lists sectors and number of entities in each on the currently loaded map\nusage: sectorlist" );
+
+    Cmd_AddCommand ("map", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "map", SV_CompleteMapName );
+    Cmd_SetDescription( "map", "Loads specified map\nusage: map <mapname>" );
+
 #ifndef PRE_RELEASE_DEMO
 	Cmd_AddCommand ("devmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "devmap", SV_CompleteMapName );
-	Cmd_AddCommand ("spmap", SV_Map_f);
+    Cmd_SetDescription( "devmap", "Load maps in development mode\nusage: devmap <mapname>" );
+
+    Cmd_AddCommand ("spmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "spmap", SV_CompleteMapName );
-	Cmd_AddCommand ("spdevmap", SV_Map_f);
+    Cmd_SetDescription( "spmap", "Load map in single player mode with bots\nusage: spmap <mapname>" );
+
+    Cmd_AddCommand ("spdevmap", SV_Map_f);
 	Cmd_SetCommandCompletionFunc( "spdevmap", SV_CompleteMapName );
+    Cmd_SetDescription( "spdevmap", "Load maps in development single player mode\nusage: spdevmap <mapname>" );
+
 #endif
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
+    Cmd_SetDescription( "killserver", "Stops server from running\nusage: killserver" );
+
 #ifdef USE_BANS	
 	Cmd_AddCommand("rehashbans", SV_RehashBans_f);
+    Cmd_SetDescription( "rehashbans", "Hash ban list for faster lookup\nusage: rehashbans" );
+
 	Cmd_AddCommand("listbans", SV_ListBans_f);
-	Cmd_AddCommand("banaddr", SV_BanAddr_f);
+    Cmd_SetDescription( "listbans", "List all ban rules\nusage: listbans" );
+
+    Cmd_AddCommand("banaddr", SV_BanAddr_f);
+    Cmd_SetDescription( "banaddr", "Ban a specific IP address\nusage: banaddr <address>" );
+
 	Cmd_AddCommand("exceptaddr", SV_ExceptAddr_f);
-	Cmd_AddCommand("bandel", SV_BanDel_f);
+    Cmd_SetDescription( "exceptaddr", "Allow a specific IP address to be excluded from ban\nusage: exceptaddr <address>" );
+
+    Cmd_AddCommand("bandel", SV_BanDel_f);
+    Cmd_SetDescription( "bandel", "Remove a specific ban\nusage: bandel <ban>" );
+
 	Cmd_AddCommand("exceptdel", SV_ExceptDel_f);
+	Cmd_SetDescription( "exceptdel", "Allow a specific ban to be excluded\nusage: exceptdel <ban>" );
+
 	Cmd_AddCommand("flushbans", SV_FlushBans_f);
+	Cmd_SetDescription( "flushbans", "Clear all bans\nusage: flushbans" );
 #endif
 	Cmd_AddCommand( "filter", SV_AddFilter_f );
+    Cmd_SetDescription( "filter", "Filter a specific client from connecting\nusage: %s <id> [key1] [key2]" );
+
 	Cmd_AddCommand( "filtercmd", SV_AddFilterCmd_f );
+    Cmd_SetDescription( "filtercmd", "Run a command while filtering\nusage: %s <filter format string>" );
 #ifdef USE_MV
 	Cmd_AddCommand( "mvrecord", SV_MultiViewRecord_f );
+    Cmd_SetDescription( "mvrecord", "Start a multiview recording\nusage: mvrecord <filename>" );
+
 	Cmd_AddCommand( "mvstoprecord", SV_MultiViewStopRecord_f );
+    Cmd_SetDescription( "mvstoprecord", "Stop a multiview recording\nusage: mvstoprecord" );
 #endif
 }
 
@@ -2074,10 +2120,19 @@ void SV_RemoveOperatorCommands( void ) {
 void SV_AddDedicatedCommands( void )
 {
 	Cmd_AddCommand( "serverinfo", SV_Serverinfo_f );
-	Cmd_AddCommand( "systeminfo", SV_Systeminfo_f );
-	Cmd_AddCommand( "tell", SV_ConTell_f );
-	Cmd_AddCommand( "say", SV_ConSay_f );
-	Cmd_AddCommand( "locations", SV_Locations_f );
+    Cmd_SetDescription( "serverinfo", "Gives information about local server from the console of that server\nusage: serverinfo" );
+
+    Cmd_AddCommand( "systeminfo", SV_Systeminfo_f );
+    Cmd_SetDescription( "systeminfo", "Returns values for g_syncronousclients, sv_serverid, and timescale\nusage: systeminfo" );
+
+    Cmd_AddCommand( "tell", SV_ConTell_f );
+    Cmd_SetDescription( "tell", "Say something to an individual on the server\nusage: tell <playername> <text>" );
+
+    Cmd_AddCommand( "say", SV_ConSay_f );
+    Cmd_SetDescription( "say", "Say something to everyone on the server\nusage: svsay <text>");
+
+    Cmd_AddCommand( "locations", SV_Locations_f );
+    Cmd_SetDescription( "locations", "Display a list of client locations from their country setting\nusage: locations" );
 }
 
 

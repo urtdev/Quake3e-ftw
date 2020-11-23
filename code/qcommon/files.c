@@ -4699,10 +4699,20 @@ static void FS_Startup( void ) {
 	Com_Printf( "----- FS_Startup -----\n" );
 
 	fs_debug = Cvar_Get( "fs_debug", "0", 0 );
-	fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
-	fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
-	fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
-	fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+    Cvar_SetDescription(fs_debug, "Toggle filesystem debug logging, every file open is shown\nDefault: 0");
+
+    fs_copyfiles = Cvar_Get( "fs_copyfiles", "0", CVAR_INIT );
+    Cvar_SetDescription(fs_copyfiles, "Toggle if files can be copied after downloading from the server\nDefault: 0");
+
+    fs_basepath = Cvar_Get( "fs_basepath", Sys_DefaultBasePath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+    Cvar_SetDescription(fs_basepath, "Set the path of the engine where files can be downloaded\nDefault: varies by operating system");
+
+    fs_basegame = Cvar_Get( "fs_basegame", BASEGAME, CVAR_INIT | CVAR_PROTECTED );
+    Cvar_SetDescription(fs_basegame, "Set the base game for the engine, baseq3, baseoa, baseef");
+
+    fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
+    Cvar_SetDescription(fs_steampath, "The search path for Steam data when the engine is downloaded through Steam");
+
 
 #ifndef USE_HANDLE_CACHE
 	fs_locked = Cvar_Get( "fs_locked", "0", CVAR_INIT );
@@ -4724,8 +4734,9 @@ static void FS_Startup( void ) {
 
 	fs_gamedirvar = Cvar_Get( "fs_game", BASEGAME, CVAR_INIT | CVAR_SYSTEMINFO );
 	Cvar_CheckRange( fs_gamedirvar, NULL, NULL, CV_FSPATH );
+    Cvar_SetDescription(fs_gamedirvar, "Set gamedir set the game folder/dir default is baseq3 in addition to the fs_basegame\nDefault: empty");
 
-	if ( !Q_stricmp( fs_basegame->string, fs_gamedirvar->string ) ) {
+    if ( !Q_stricmp( fs_basegame->string, fs_gamedirvar->string ) ) {
 		Cvar_ForceReset( "fs_game" );
 	}
 
@@ -4793,13 +4804,26 @@ static void FS_Startup( void ) {
 
 	// add our commands
 	Cmd_AddCommand( "path", FS_Path_f );
+    Cmd_SetDescription( "path", "Display all current game paths\nusage: path" );
+
 	Cmd_AddCommand( "dir", FS_Dir_f );
+    Cmd_SetDescription( "dir", "List a directory's contents\nusage: dir <directory> [extension]" );
+
 	Cmd_AddCommand( "fdir", FS_NewDir_f );
+    Cmd_SetDescription( "fdir", "List a directory's contents filtered\nusage: fdir <filter>" );
+
 	Cmd_AddCommand( "touchFile", FS_TouchFile_f );
-	Cmd_AddCommand( "lsof", FS_ListOpenFiles_f );
+    Cmd_SetDescription( "touchFile", "Update the file-opened time\nusage: touchFile <filename>");
+
+    Cmd_AddCommand( "lsof", FS_ListOpenFiles_f );
+    Cmd_SetDescription( "lsof", "List opened files\nusage: lsof");
+
  	Cmd_AddCommand( "which", FS_Which_f );
+    Cmd_SetDescription( "which", "Show the full path of a file\nusage: which <file>");
 	Cmd_SetCommandCompletionFunc( "which", FS_CompleteFileName );
+
 	Cmd_AddCommand( "fs_restart", FS_Reload );
+    Cmd_SetDescription( "fs_restart", "Restart the filesystem and load new game paths\nusage: fs_restart");
 
 	// print the current search paths
 	//FS_Path_f();

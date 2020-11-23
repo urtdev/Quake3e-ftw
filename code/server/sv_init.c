@@ -774,35 +774,59 @@ void SV_Init( void )
 	Cvar_Get ("fraglimit", "20", CVAR_SERVERINFO);
 	Cvar_Get ("timelimit", "0", CVAR_SERVERINFO);
 	sv_gametype = Cvar_Get ("g_gametype", "0", CVAR_SERVERINFO | CVAR_LATCH );
-	Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
-	Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
-	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
-	sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
-	Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
-	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
-	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
-	Cvar_CheckRange( sv_maxclients, "1", XSTRING(MAX_CLIENTS), CV_INTEGER );
+    Cvar_SetDescription(sv_gametype, "Holds the game style for the current match included in server info\nDefault: 0");
 
-	sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
+    Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO);
+    Cvar_SetDescription(Cvar_Get ("sv_keywords", "", CVAR_SERVERINFO),
+                        "Holds the search string entered in the internet connection menu\nDefault: empty");
+	Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM);
+    Cvar_SetDescription(Cvar_Get ("protocol", va("%i", PROTOCOL_VERSION), CVAR_SERVERINFO | CVAR_ROM),
+                        "Holds the network protocol version\nDefault: " XSTRING(PROTOCOL_VERSION));
+	sv_mapname = Cvar_Get ("mapname", "nomap", CVAR_SERVERINFO | CVAR_ROM);
+    Cvar_SetDescription(sv_mapname, "Holds the name of the current map\nDefault: nomap");
+
+    sv_privateClients = Cvar_Get( "sv_privateClients", "0", CVAR_SERVERINFO );
+    Cvar_SetDescription(sv_privateClients, "The number of spots, out of sv_maxclients, reserved for players with the server password\nDefault: 0");
+
+    Cvar_CheckRange( sv_privateClients, "0", va( "%i", MAX_CLIENTS-1 ), CV_INTEGER );
+	sv_hostname = Cvar_Get ("sv_hostname", "noname", CVAR_SERVERINFO | CVAR_ARCHIVE );
+    Cvar_SetDescription(sv_hostname, "Set the name of the server\nDefault: noname");
+
+    sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
+	Cvar_CheckRange( sv_maxclients, "1", XSTRING(MAX_CLIENTS), CV_INTEGER );
+    Cvar_SetDescription(sv_maxclients, "Maximum number of people allowed to join the server\nDefault: 8");
+
+    sv_maxclientsPerIP = Cvar_Get( "sv_maxclientsPerIP", "3", CVAR_ARCHIVE );
 	Cvar_CheckRange( sv_maxclientsPerIP, "1", NULL, CV_INTEGER );
 	Cvar_SetDescription( sv_maxclientsPerIP, "Limits number of simultaneous connections from the same IP address." );
+    Cvar_SetDescription( sv_maxclientsPerIP, "Limits number of simultaneous connections from the same IP address.\nDefault: 3" );
 
-	sv_clientTLD = Cvar_Get( "sv_clientTLD", "0", CVAR_ARCHIVE_ND );
+    sv_clientTLD = Cvar_Get( "sv_clientTLD", "0", CVAR_ARCHIVE_ND );
 	Cvar_CheckRange( sv_clientTLD, NULL, NULL, CV_INTEGER );
+    Cvar_SetDescription(sv_clientTLD, "Include client locations in status and demo recordings\nDefault: 0");
 
 #ifdef USE_MV
     Cvar_Get( "mvproto", va( "%i", MV_PROTOCOL_VERSION ), CVAR_SERVERINFO | CVAR_ROM );
     sv_autoRecord = Cvar_Get( "sv_mvAutoRecord", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
+    Cvar_SetDescription(sv_autoRecord, "Automatically record a multiview demo\nDefault: 0");
+
     sv_demoFlags = Cvar_Get( "sv_mvFlags", "3", CVAR_ARCHIVE );
+    Cvar_SetDescription(sv_demoFlags, "Record scoring in the multiview demo\nDefault: 3");
+
     sv_mvClients = Cvar_Get( "sv_mvClients", "0", CVAR_ARCHIVE | CVAR_LATCH );
+    Cvar_SetDescription(sv_mvClients, "Number of multiview clients allowed\nDefault: 8");
     Cvar_CheckRange( sv_mvClients, "0", NULL, CV_INTEGER );
+
     sv_mvPassword = Cvar_Get( "sv_mvPassword", "", CVAR_ARCHIVE );
+    Cvar_SetDescription(sv_mvPassword, "Set the password for multiview clients\nDefault: empty");
 
     sv_mvFileCount = Cvar_Get( "sv_mvFileCount", "1024", CVAR_ARCHIVE );
     Cvar_CheckRange( sv_mvFileCount, "0", XSTRING( MAX_MV_FILES ), CV_INTEGER );
+    Cvar_SetDescription(sv_mvFileCount, "Set the maximum number of multiview recordings before it reuses numeric names\nDefault: 1024");
 
     sv_mvFolderSize = Cvar_Get( "sv_mvFolderSize", "768", CVAR_ARCHIVE );
     Cvar_CheckRange( sv_mvFolderSize, "0", "2048", CV_INTEGER );
+    Cvar_SetDescription(sv_mvFolderSize, "Set the multiview folder size for automatic recordings, rotate when maxed out\nDefault: 768");
 
     //Cvar_SetDescription( sv_mvFileCount, "Max. count of autorecorded demos, older demos will be deleted to release free space\n" );
     //Cvar_SetDescription( sv_mvFolderSize, "Max. total size of autorecorded demos in megabytes, older demos will be deleted to release free space\n" );
@@ -811,26 +835,45 @@ void SV_Init( void )
 #endif
 
 	sv_minRate = Cvar_Get ("sv_minRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
-	sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
-	sv_minPing = Cvar_Get("sv_minPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
-	sv_maxPing = Cvar_Get("sv_maxPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
-	sv_dlRate = Cvar_Get("sv_dlRate", "100", CVAR_ARCHIVE | CVAR_SERVERINFO);
-	sv_floodProtect = Cvar_Get ("sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
+    Cvar_SetDescription(sv_minRate, "Force clients to play with a minimum latency\nDefault: 0");
 
-	// systeminfo
+    sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE_ND | CVAR_SERVERINFO );
+    Cvar_SetDescription(sv_maxRate, "Force all clients to play with a max rate, limit an advantage for having a low latency\nDefault: 0");
+
+    sv_minPing = Cvar_Get("sv_minPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
+	sv_maxPing = Cvar_Get("sv_maxPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO);
+
+	sv_dlRate = Cvar_Get("sv_dlRate", "100", CVAR_ARCHIVE | CVAR_SERVERINFO);
+    Cvar_SetDescription(sv_dlRate, "Set the maximum rate for server downloads\nDefault: 100");
+
+    sv_floodProtect = Cvar_Get ("sv_floodProtect", "1", CVAR_ARCHIVE | CVAR_SERVERINFO );
+    Cvar_SetDescription( sv_floodProtect, "Toggle server flood protection to keep players from bringing the server down\nDefault: 1" );
+
+    // systeminfo
 	Cvar_Get( "sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_serverid = Cvar_Get( "sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	sv_pure = Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO | CVAR_LATCH );
-	Cvar_Get( "sv_paks", "", CVAR_SYSTEMINFO | CVAR_ROM );
+    Cvar_SetDescription(sv_serverid, "Hold the server ID sent to clients");
+
+    sv_pure = Cvar_Get( "sv_pure", "1", CVAR_SYSTEMINFO | CVAR_LATCH );
+    Cvar_SetDescription(sv_pure, "Make sure clients load the same pak files as the server, disallow native VMs\nDefault: 1");
+
+    Cvar_Get( "sv_paks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get( "sv_pakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	Cvar_Get( "sv_referencedPaks", "", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_referencedPakNames = Cvar_Get( "sv_referencedPakNames", "", CVAR_SYSTEMINFO | CVAR_ROM );
+    Cvar_SetDescription(sv_referencedPakNames, "Holds the names of paks referenced by the server for comparison client-side\nDefault: empty");
 
-	// server vars
+    // server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
-	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
-	sv_fps = Cvar_Get ("sv_fps", "120", CVAR_PROTECTED );
-	//Cvar_CheckRange( sv_fps, "20", "125", CV_INTEGER );
+    Cvar_SetDescription(sv_rconPassword, "Set the rcon password required to send the server commands\nDefault: empty");
+
+    sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
+    Cvar_SetDescription(sv_privatePassword, "Set password for private clients to login\nDefault: empty");
+
+    sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP  );
+    Cvar_SetDescription(sv_fps, "Set the max frames per second the server sends the client\nDefault: 20");
+
+    //Cvar_CheckRange( sv_fps, "20", "125", CV_INTEGER );
 	sv_timeout = Cvar_Get( "sv_timeout", "200", CVAR_TEMP );
 	Cvar_CheckRange( sv_timeout, "4", NULL, CV_INTEGER );
 	Cvar_SetDescription( sv_timeout, "Seconds without any message before automatic client disconnect" );
@@ -840,7 +883,11 @@ void SV_Init( void )
 	Cvar_Get ("nextmap", "", CVAR_TEMP );
 
 	sv_allowDownload = Cvar_Get ("sv_allowDownload", "1", CVAR_SERVERINFO);
-	Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
+    Cvar_SetDescription( sv_allowDownload, "Toggle the ability for clients to download files maps from server\nDefault: 1" );
+
+    Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE);
+    Cvar_SetDescription(Cvar_Get ("sv_dlURL", "", CVAR_SERVERINFO | CVAR_ARCHIVE),
+                        "Set the download URL for clients to download content\nDefault: empty");
 
     sv_master[0] = Cvar_Get ("sv_master1", MASTER_SERVER_NAME, 0 );
     sv_master[1] = Cvar_Get ("sv_master2", MASTER2_SERVER_NAME, CVAR_ARCHIVE );
@@ -851,13 +898,22 @@ void SV_Init( void )
 	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
 		sv_master[index] = Cvar_Get(va("sv_master%d", index + 1), "", CVAR_ARCHIVE);
 
-	sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
+    sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
 	Cvar_CheckRange( sv_reconnectlimit, "0", "12", CV_INTEGER );
+    Cvar_SetDescription(sv_reconnectlimit, "Number of times a disconnected client can come back and reconnect\nDefault: 12");
 
-	sv_padPackets = Cvar_Get ("sv_padPackets", "0", 0);
-	sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
-	sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
-	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
+    sv_padPackets = Cvar_Get ("sv_padPackets", "0", 0);
+    Cvar_SetDescription( sv_padPackets, "Toggles the padding of network packets\nDefault: 0" );
+
+    sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
+    Cvar_SetDescription(sv_killserver, "Set to a one the server goes down\nDefault: 0");
+
+    sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
+    Cvar_SetDescription(sv_mapChecksum, "Allows clients to compare the map checksum\nDefault: empty");
+
+    sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
+    Cvar_SetDescription( sv_lanForceRate, "Force clients to use the same packet rate as the server\nDefault: 1" );
+
     sv_strictAuth = Cvar_Get ("sv_strictAuth", "1", CVAR_ARCHIVE );
 
 #ifdef USE_AUTH
@@ -867,13 +923,16 @@ void SV_Init( void )
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
+    Cvar_SetDescription("Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
 #endif
 
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );
+    Cvar_SetDescription( sv_levelTimeReset, "Reset the clock in between matches\nDefault: 0");
 
-	sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
+    sv_filter = Cvar_Get( "sv_filter", "filter.txt", CVAR_ARCHIVE );
+    Cvar_SetDescription(sv_filter, "Set the ban filter file\nDefault: filter.txt");
 
-	// initialize bot cvars so they are listed and can be set before loading the botlib
+    // initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
 
 	// init the botlib here because we need the pre-compiler in the UI

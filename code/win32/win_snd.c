@@ -741,6 +741,10 @@ void SNDDMA_Shutdown( void ) {
 }
 
 
+#ifndef NO_DMAHD
+qboolean dmaHD_Enabled(void);
+#endif
+
 /*
 ==================
 SNDDMA_Init
@@ -857,6 +861,16 @@ qboolean SNDDMA_InitDS( void )
 		case 22:
 		default: dma.speed = 22050; break;
 	};
+
+#ifndef NO_DMAHD
+    if (dmaHD_Enabled())
+    {
+        // p5yc0runn3r - Fix dmaHD sound to 44KHz, Stereo and 16 bits per sample.
+        dma.speed = 44100;
+        dma.channels = 2;
+        dma.samplebits = 16;
+    }
+#endif
 
 	memset (&format, 0, sizeof(format));
 	format.wFormatTag = WAVE_FORMAT_PCM;
