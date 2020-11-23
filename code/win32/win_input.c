@@ -1238,18 +1238,18 @@ void IN_Frame( void ) {
 	if ( Key_GetCatcher() & KEYCATCH_CONSOLE ) {
 		// temporarily deactivate if not in the game and
 		// running on the desktop with multimonitor configuration
-		if ( con_escape_mouse->integer == 1 && (!glw_state.cdsFullscreen || glw_state.monitorCount > 1) )
+		if ( con_escape_mouse->integer == 1 && !glw_state.cdsFullscreen )
 		{
 			IN_DeactivateMouse();
 			//WIN_EnableAltTab();
 			//WIN_DisableHook();
             return;
-		} else {
-            int mx, my;
-            // capture mouse button input from DI
-            IN_DIMouse(&mx, &my);
-            return;
 		}
+
+        int mx, my;
+        // capture mouse button input from DI
+        IN_DIMouse(&mx, &my);
+        return;
 	}
 
 	if ( !gw_active || in_nograb->integer ) {
