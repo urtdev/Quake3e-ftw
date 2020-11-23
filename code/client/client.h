@@ -249,7 +249,6 @@ typedef struct {
 	qboolean	spDemoRecording;
 	qboolean	demorecording;
 	qboolean	demoplaying;
-	int         demoprotocol;
 	qboolean	demowaiting;	// don't record until a non-delta message is received
 	qboolean	firstDemoFrameSkipped;
 	fileHandle_t	demofile;
