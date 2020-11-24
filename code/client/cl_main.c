@@ -745,10 +745,19 @@ static void CL_DemoCompleted( void ) {
 		}
 	}
 
-	clc.demoprotocol = 0;
-
 	CL_Disconnect( qtrue );
 	CL_NextDemo();
+}
+
+void CL_CheckDemoProtocol( void ) {
+    if ( clc.demoprotocol == 0 ) {
+        char *ext;
+        ext = strrchr(clc.demoName, '.'); //dm_ demo
+        if (ext && !Q_stricmpn(ext + 1, URTDEMOEXT, ARRAY_LEN(URTDEMOEXT) - 1))
+            clc.demoprotocol = URT_PROTOCOL_VERSION;
+        else if (ext && !Q_stricmpn(ext + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1))
+            clc.demoprotocol = clc.demoprotocol = atoi(ext + ARRAY_LEN(DEMOEXT));
+    }
 }
 
 
@@ -798,13 +807,7 @@ void CL_ReadDemoMessage( void ) {
 	}
 
 #ifdef USE_URT_DEMO
-	if ( clc.demoprotocol == 0 ) {
-	    char *ext;
-	    ext = strrchr(clc.demoName, '.'); //dm_ demo
-		if (!Q_stricmpn(ext + 1, URTDEMOEXT, ARRAY_LEN(URTDEMOEXT) - 1))
-			clc.demoprotocol = URT_PROTOCOL_VERSION;
-	}
-
+	CL_CheckDemoProtocol();
     if ( clc.demoprotocol == URT_PROTOCOL_VERSION && buf.cursize == 0 ) { // backward read gain the header demo /* holblin */
         CL_DemoCompleted ();
         return;
@@ -968,12 +971,10 @@ static void CL_PlayDemo_f( void ) {
 	const char	*shortname, *slash;
 	fileHandle_t hFile;
 
-	if ( Cmd_Argc() != 2 ) {
+    if ( Cmd_Argc() != 2 ) {
 		Com_Printf( "demo <demoname>\n" );
 		return;
 	}
-
-	clc.demoprotocol = 0;
 
 	// open the demo file
 	arg = Cmd_Argv( 1 );
@@ -1031,7 +1032,7 @@ static void CL_PlayDemo_f( void ) {
     else {
         clc.demoprotocol = CL_WalkDemoExt(arg, name, &hFile);
     }
-	
+
 	if ( hFile == FS_INVALID_HANDLE ) {
 		Com_Printf( S_COLOR_YELLOW "couldn't open %s\n", name );
 		return;
@@ -1067,7 +1068,7 @@ static void CL_PlayDemo_f( void ) {
     //@Barbatos: get the mod version from the server
 	//serverInfo = cl.gameState.stringData + cl.gameState.stringOffsets[ CS_SERVERINFO ];
 	//s1 = Info_ValueForKey(serverInfo, "g_modversion");
-
+	CL_CheckDemoProtocol();
     if ( clc.demoprotocol == URT_PROTOCOL_VERSION ) {
         r = FS_Read( &len, 4, clc.demofile );
         if ( r != 4 ) {
@@ -1131,7 +1132,7 @@ static void CL_PlayDemo_f( void ) {
 	clc.demoplaying = qtrue;
 	Q_strncpyz( cls.servername, shortname, sizeof( cls.servername ) );
 
-	if ( clc.demoprotocol < NEW_PROTOCOL_VERSION )
+	if ( clc.demoprotocol < URT_PROTOCOL_VERSION )
 		clc.compat = qtrue;
 	else
 		clc.compat = qfalse;
