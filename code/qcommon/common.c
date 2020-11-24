@@ -3999,7 +3999,7 @@ void Com_Frame( qboolean noDelay ) {
 #ifndef DEDICATED
 	static int bias = 0;
 #endif
-	int	msec, minMsec;
+	int	msec, realMsec, minMsec;
 	int	sleepMsec;
 	int	timeVal;
 	int	timeValSV;
@@ -4108,12 +4108,12 @@ void Com_Frame( qboolean noDelay ) {
 
 	lastTime = com_frameTime;
 	com_frameTime = Com_EventLoop();
-	msec = com_frameTime - lastTime;
+	realMsec = com_frameTime - lastTime;
 
 	Cbuf_Execute();
 
 	// mess with msec if needed
-	msec = Com_ModifyMsec( msec );
+	msec = Com_ModifyMsec( realMsec );
 
 	//
 	// server side
@@ -4182,7 +4182,7 @@ void Com_Frame( qboolean noDelay ) {
 			timeBeforeClient = Sys_Milliseconds();
 		}
 
-		CL_Frame( msec );
+		CL_Frame( msec, realMsec );
 
 		if ( com_speeds->integer ) {
 			timeAfter = Sys_Milliseconds();

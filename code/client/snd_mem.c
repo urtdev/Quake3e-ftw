@@ -88,6 +88,7 @@ void SND_setup( void )
 
 	cv = Cvar_Get( "com_soundMegs", DEF_COMSOUNDMEGS, CVAR_LATCH | CVAR_ARCHIVE );
     Cvar_SetDescription(cv, "The megabytes to allocate for sound can be adjusted to provide better performance on systems with more than 64mb of memory\nDefault: 8");
+	Cvar_CheckRange( cv, "1", "512", CV_INTEGER );
 
     scs = (
 #ifndef NO_DMAHD

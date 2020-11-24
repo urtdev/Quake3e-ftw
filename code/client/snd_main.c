@@ -231,10 +231,10 @@ void S_UpdateEntityPosition( int entityNum, const vec3_t origin )
 S_Update
 =================
 */
-void S_Update( void )
+void S_Update( int msec )
 {
-	if( si.Update ) {
-		si.Update();
+	if ( si.Update ) {
+		si.Update( msec );
 	}
 }
 
@@ -428,7 +428,14 @@ void S_Init( void )
     cv = Cvar_Get( "s_initsound", "1", 0 );
     Cvar_SetDescription(cv, "Use sounds, or disable them entirely\nDefault: 1");
 
-    if( !cv->integer ) {
+	Cvar_CheckRange( s_volume, "0", "1", CV_FLOAT );
+	Cvar_CheckRange( s_musicVolume, "0", "1", CV_FLOAT );
+	Cvar_CheckRange( s_doppler, "0", "1", CV_INTEGER );
+	Cvar_CheckRange( s_muteWhenUnfocused, "0", "1", CV_INTEGER );
+	Cvar_CheckRange( s_muteWhenMinimized, "0", "1", CV_INTEGER );
+
+	cv = Cvar_Get( "s_initsound", "1", 0 );
+	if ( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );
 	} else {
 
@@ -453,11 +460,11 @@ void S_Init( void )
         Cmd_SetDescription("s_info", "Display information about sound system\nusage: s_info");
 
 
-        if( !started ) {
+		if ( !started ) {
 			started = S_Base_Init( &si );
 		}
 
-		if( started ) {
+		if ( started ) {
 			if( !S_ValidSoundInterface( &si ) ) {
 				Com_Error( ERR_FATAL, "Sound interface invalid" );
 			}

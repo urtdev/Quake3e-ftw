@@ -913,7 +913,7 @@ static void S_Base_RawSamples( int samples, int rate, int width, int n_channels,
 
 	intVolume = 256 * volume;
 
-	if ( s_rawend < s_soundtime ) {
+	if ( s_rawend - s_soundtime < 0 ) {
 		Com_DPrintf( "S_RawSamples: resetting minimum: %i < %i\n", s_rawend, s_soundtime );
 		s_rawend = s_soundtime;
 	}
@@ -991,7 +991,7 @@ static void S_Base_RawSamples( int samples, int rate, int width, int n_channels,
 		}
 	}
 
-	if ( s_rawend > s_soundtime + MAX_RAW_SAMPLES ) {
+	if ( s_rawend - s_soundtime > MAX_RAW_SAMPLES ) {
 		Com_DPrintf( "S_RawSamples: overflowed %i > %i\n", s_rawend, s_soundtime );
 	}
 }
@@ -1068,7 +1068,7 @@ S_ScanChannelStarts
 Returns qtrue if any new sounds were started since the last mix
 ========================
 */
-qboolean S_ScanChannelStarts( void ) {
+static qboolean S_ScanChannelStarts( void ) {
 	channel_t		*ch;
 	int				i;
 	qboolean		newSamples;
@@ -1076,7 +1076,7 @@ qboolean S_ScanChannelStarts( void ) {
 	newSamples = qfalse;
 	ch = s_channels;
 
-	for (i=0; i<MAX_CHANNELS ; i++, ch++) {
+	for ( i = 0; i < MAX_CHANNELS; i++, ch++ ) {
 		if ( !ch->thesfx ) {
 			continue;
 		}
@@ -1090,8 +1090,8 @@ qboolean S_ScanChannelStarts( void ) {
 		}
 
 		// if it is completely finished by now, clear it
-		if ( ch->startSample + (ch->thesfx->soundLength) <= s_paintedtime ) {
-			S_ChannelFree(ch);
+		if ( ch->startSample + (ch->thesfx->soundLength) - s_soundtime <= 0 ) {
+			S_ChannelFree( ch );
 		}
 	}
 
@@ -1106,7 +1106,7 @@ S_Update
 Called once each time through the main loop
 ============
 */
-void S_Base_Update( void ) {
+static void S_Base_Update( int msec ) {
 	int			i;
 	int			total;
 	channel_t	*ch;
@@ -1132,11 +1132,8 @@ void S_Base_Update( void ) {
 		Com_Printf ("----(%i)---- painted: %i\n", total, s_paintedtime);
 	}
 
-	// add raw data from streamed samples
-	S_UpdateBackgroundTrack();
-
 	// mix some sound
-	S_Update_();
+	S_Update_( msec );
 }
 
 
@@ -1178,15 +1175,6 @@ void S_GetSoundtime( void )
 
 	s_soundtime = buffers * dma.fullsamples + samplepos/dma.channels;
 
-#if 0
-// check to make sure that we haven't overshot
-	if (s_paintedtime < s_soundtime)
-	{
-		Com_DPrintf ("S_Update_ : overflow\n");
-		s_paintedtime = s_soundtime;
-	}
-#endif
-
 	if ( dma.submission_chunk < 256 ) {
 		s_paintedtime = s_soundtime + s_mixPreStep->value * dma.speed;
 	} else {
@@ -1195,12 +1183,12 @@ void S_GetSoundtime( void )
 }
 
 
-static void S_Update_( void ) {
+static void S_Update_( int msec ) {
 	unsigned		endtime;
-	static float	lastTime = 0.0f;
-	float			ma, op;
-	float			thisTime, sane;
-	static			int ot = -1;
+	int				mixAhead[2];
+	int				thisTime, sane;
+	static int		ot = -1;
+	static int		lastTime = 0;
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
@@ -1211,9 +1199,10 @@ static void S_Update_( void ) {
 	// Updates s_soundtime
 	S_GetSoundtime();
 
-	if (s_soundtime == ot) {
+	if ( s_soundtime == ot ) {
 		return;
 	}
+
 	ot = s_soundtime;
 
 	// clear any sound effects that end before the current time,
@@ -1221,27 +1210,31 @@ static void S_Update_( void ) {
 	S_ScanChannelStarts();
 
 	sane = thisTime - lastTime;
-	if (sane<11) {
-		sane = 11;			// 85hz
+	if ( sane < msec ) {
+		sane = msec;
 	}
 
-	ma = s_mixahead->value * dma.speed;
-	op = s_mixPreStep->value + sane*dma.speed*0.01;
+	mixAhead[0] = s_mixahead->value * (float)dma.speed;
+	mixAhead[1] = sane * 0.0015f * (float)dma.speed;
 
-	if (op < ma) {
-		ma = op;
+	if ( mixAhead[0] < mixAhead[1] ) {
+		mixAhead[0] = mixAhead[1];
 	}
 
 	// mix ahead of current position
-	endtime = s_soundtime + ma;
+	endtime = s_paintedtime + mixAhead[0];
 
 	// mix to an even submission block size
 	endtime = (endtime + dma.submission_chunk-1)
 		& ~(dma.submission_chunk-1);
 
 	// never mix more than the complete buffer
-	if (endtime - s_soundtime > dma.fullsamples)
+	if ( endtime - s_soundtime > dma.fullsamples ) {
 		endtime = s_soundtime + dma.fullsamples;
+	}
+
+	// add raw data from streamed samples
+	S_UpdateBackgroundTrack();
 
 	SNDDMA_BeginPainting();
 
@@ -1251,7 +1244,6 @@ static void S_Update_( void ) {
 
 	lastTime = thisTime;
 }
-
 
 
 /*
@@ -1341,27 +1333,27 @@ void S_UpdateBackgroundTrack( void ) {
 	int		fileBytes;
 	int		r;
 
-	if(!s_backgroundStream) {
+	if ( !s_backgroundStream ) {
 		return;
 	}
 
 	// don't bother playing anything if musicvolume is 0
-	if ( s_musicVolume->value <= 0 ) {
+	if ( s_musicVolume->value == 0.0f ) {
 		return;
 	}
 
 	// see how many samples should be copied into the raw buffer
-	if ( s_rawend < s_soundtime ) {
+	if ( s_rawend - s_soundtime < 0 ) {
 		s_rawend = s_soundtime;
 	}
 
-	while ( s_rawend < s_soundtime + MAX_RAW_SAMPLES ) {
+	while ( s_rawend - s_soundtime < MAX_RAW_SAMPLES ) {
 		bufferSamples = MAX_RAW_SAMPLES - (s_rawend - s_soundtime);
 
 		// decide how much data needs to be read from the file
 		fileSamples = bufferSamples * s_backgroundStream->info.rate / dma.speed;
 
-		if (!fileSamples) {
+		if ( fileSamples == 0 ) {
 			return;
 		}
 
@@ -1379,7 +1371,7 @@ void S_UpdateBackgroundTrack( void ) {
 			fileSamples = r / (s_backgroundStream->info.width * s_backgroundStream->info.channels);
 		}
 
-		if( r > 0 )
+		if ( r > 0 )
 		{
 			// add to raw buffer
 			S_Base_RawSamples( fileSamples, s_backgroundStream->info.rate,
@@ -1388,10 +1380,10 @@ void S_UpdateBackgroundTrack( void ) {
 		else
 		{
 			// loop
-			if( s_backgroundLoop[0] )
+			if ( s_backgroundLoop[0] != '\0' )
 			{
 				S_OpenBackgroundStream( s_backgroundLoop );
-				if( !s_backgroundStream )
+				if ( !s_backgroundStream )
 					return;
 			}
 			else
@@ -1505,9 +1497,11 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 	}
 
 	s_mixahead = Cvar_Get( "s_mixahead", "0.2", CVAR_ARCHIVE );
+    Cvar_CheckRange( s_mixahead, "0.001", "0.5", CV_FLOAT );
     Cvar_SetDescription(s_mixahead, "Mix sounds together because they are used to reduce skipping\nDefault: 0.2 seconds");
 
     s_mixPreStep = Cvar_Get( "s_mixPreStep", "0.05", CVAR_ARCHIVE );
+    Cvar_CheckRange( s_mixPreStep, "0.04", "0.5", CV_FLOAT );
     Cvar_SetDescription(s_mixPreStep, "Mix sounds ahead of time to prevent delays while loading\nDefault: 0.05");
 
     s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
