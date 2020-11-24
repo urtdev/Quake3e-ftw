@@ -759,16 +759,25 @@ qboolean SNDDMA_Init( void ) {
 	const char *defdrv;
 	cvar_t *s_driver;
 
-	if ( IsWindows7OrGreater() )
+#ifndef NO_DMAHD
+	if ( IsWindows7OrGreater() && !dmaHD_Enabled())
+#else
+    if ( IsWindows7OrGreater() )
+#endif
 		defdrv = "wasapi";
-	else
+    else
 		defdrv = "dsound";
 
-	s_driver = Cvar_Get( "s_driver", defdrv, CVAR_LATCH | CVAR_ARCHIVE_ND );
-
+    s_driver = Cvar_Get( "s_driver", defdrv, CVAR_LATCH | CVAR_ARCHIVE_ND );
 	Cvar_SetDescription( s_driver, "Specify sound subsystem in win32 environment:\n"
-		" dsound - DirectSound\n"
-		" wasapi - WASAPI\n" );
+		" dsound - DirectSound (forced with `dmaHD_enable 1`)\n"
+        " wasapi - WASAPI (cannot be used with `dmaHD_enable 1`)\n" );
+
+#ifndef NO_DMAHD
+	if ( dmaHD_Enabled() ) {
+	    Cvar_Set("s_driver", "dsound");
+	}
+#endif
 #endif
 
 	memset( &dma, 0, sizeof( dma ) );

@@ -1068,7 +1068,7 @@ S_ScanChannelStarts
 Returns qtrue if any new sounds were started since the last mix
 ========================
 */
-static qboolean S_ScanChannelStarts( void ) {
+qboolean S_ScanChannelStarts( void ) {
 	channel_t		*ch;
 	int				i;
 	qboolean		newSamples;
