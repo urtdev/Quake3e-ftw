@@ -1705,7 +1705,7 @@ static void Cvar_Trim_f( void )
 		return;
 	}
 
-#ifdef DEDICATED	
+#ifdef DEDICATED
 	Com_Printf( S_COLOR_YELLOW " You're not running a server, so not all subsystems/VMs are loaded.\n" );
 #else
 	Com_Printf( S_COLOR_YELLOW " You're not running a listen server, so not all subsystems/VMs are loaded.\n" );

@@ -434,6 +434,12 @@ void S_Init( void )
 	Cvar_CheckRange( s_muteWhenUnfocused, "0", "1", CV_INTEGER );
 	Cvar_CheckRange( s_muteWhenMinimized, "0", "1", CV_INTEGER );
 
+	Cvar_CheckRange( s_volume, "0", "1", CV_FLOAT );
+	Cvar_CheckRange( s_musicVolume, "0", "1", CV_FLOAT );
+	Cvar_CheckRange( s_doppler, "0", "1", CV_INTEGER );
+	Cvar_CheckRange( s_muteWhenUnfocused, "0", "1", CV_INTEGER );
+	Cvar_CheckRange( s_muteWhenMinimized, "0", "1", CV_INTEGER );
+
 	cv = Cvar_Get( "s_initsound", "1", 0 );
 	if ( !cv->integer ) {
 		Com_Printf( "Sound disabled.\n" );

@@ -88,8 +88,8 @@ static sfx_t *sfxHash[LOOP_HASH];
 cvar_t		*s_testsound;
 cvar_t		*s_khz;
 cvar_t		*s_show;
-cvar_t		*s_mixahead;
-cvar_t		*s_mixPreStep;
+cvar_t      *s_mixahead;
+cvar_t      *s_mixOffset;
 #if defined(__linux__) && !defined(USE_SDL)
 cvar_t		*s_device;
 #endif
@@ -1176,7 +1176,7 @@ void S_GetSoundtime( void )
 	s_soundtime = buffers * dma.fullsamples + samplepos/dma.channels;
 
 	if ( dma.submission_chunk < 256 ) {
-		s_paintedtime = s_soundtime + s_mixPreStep->value * dma.speed;
+		s_paintedtime = s_soundtime + s_mixOffset->value * dma.speed;
 	} else {
 		s_paintedtime = s_soundtime + dma.submission_chunk;
 	}
@@ -1496,13 +1496,12 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 			break;
 	}
 
-	s_mixahead = Cvar_Get( "s_mixahead", "0.2", CVAR_ARCHIVE );
+	s_mixahead = Cvar_Get("s_mixAhead", "0.2", CVAR_ARCHIVE_ND);
     Cvar_CheckRange( s_mixahead, "0.001", "0.5", CV_FLOAT );
     Cvar_SetDescription(s_mixahead, "Mix sounds together because they are used to reduce skipping\nDefault: 0.2 seconds");
 
-    s_mixPreStep = Cvar_Get( "s_mixPreStep", "0.05", CVAR_ARCHIVE );
-    Cvar_CheckRange( s_mixPreStep, "0.04", "0.5", CV_FLOAT );
-    Cvar_SetDescription(s_mixPreStep, "Mix sounds ahead of time to prevent delays while loading\nDefault: 0.05");
+	s_mixOffset = Cvar_Get("s_mixOffset", "0", CVAR_ARCHIVE_ND | CVAR_DEVELOPER);
+	Cvar_CheckRange(s_mixOffset, "0", "0.5", CV_FLOAT);
 
     s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
     Cvar_SetDescription(s_show, "Display filenames of sounds while they are being played\nDefault: 0");
@@ -1510,6 +1509,31 @@ qboolean S_Base_Init( soundInterface_t *si ) {
     s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
     Cvar_SetDescription(s_testsound, "Toggle a test tone to test sound system\nDefault: 0" );
 
+	s_khz = Cvar_Get( "s_khz", "22", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	Cvar_CheckRange( s_khz, "0", "48", CV_INTEGER );
+
+	switch( s_khz->integer ) {
+		case 48:
+		case 44:
+		case 22:
+		case 11:
+			// these are legal values
+			break;
+		default:
+			// anything else is illegal
+			Com_Printf( "WARNING: cvar 's_khz' must be one of (11, 22, 44, 48), setting to '%s'\n", s_khz->resetString );
+			Cvar_ForceReset( "s_khz" );
+			break;
+	}
+
+	s_mixahead = Cvar_Get( "s_mixAhead", "0.2", CVAR_ARCHIVE_ND );
+	Cvar_CheckRange( s_mixahead, "0.001", "0.5", CV_FLOAT );
+
+	s_mixOffset = Cvar_Get( "s_mixOffset", "0", CVAR_ARCHIVE_ND | CVAR_DEVELOPER );
+	Cvar_CheckRange( s_mixOffset, "0", "0.5", CV_FLOAT );
+
+	s_show = Cvar_Get( "s_show", "0", CVAR_CHEAT );
+	s_testsound = Cvar_Get( "s_testsound", "0", CVAR_CHEAT );
 #if defined(__linux__) && !defined(USE_SDL)
 	s_device = Cvar_Get( "s_device", "default", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	Cvar_SetDescription( s_device, "Set ALSA output device\n"

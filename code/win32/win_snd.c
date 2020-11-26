@@ -93,7 +93,7 @@ static LPWSTR DeviceID = NULL;
 static qboolean doSndRestart = qfalse;
 
 static IAudioRenderClient	*iAudioRenderClient = NULL;
-static IAudioClient			*iAudioClient = NULL; 
+static IAudioClient			*iAudioClient = NULL;
 static IMMDeviceEnumerator	*pEnumerator = NULL;
 static IMMDevice			*iMMDevice = NULL;
 
@@ -220,7 +220,7 @@ static DWORD WINAPI ThreadProc( HANDLE hInited )
 			EnterCriticalSection( &cs );
 
 			// fill pData with numFramesAvailable
-			do 
+			do
 			{
 				if ( bufferPosition + samples > dma.fullsamples )
 					n = dma.fullsamples - bufferPosition;
@@ -262,7 +262,7 @@ err_exit:
 
 
 static BOOL ValidFormat( const WAVEFORMATEXTENSIBLE *format, const WORD wFormatTag, const GUID *SubFormat ) {
-	
+
 	if ( format->Format.wFormatTag == wFormatTag )
 	{
 		return TRUE;
@@ -289,7 +289,7 @@ NotificationClient_t;
 
 static HRESULT STDMETHODCALLTYPE QueryInterface( IMMNotificationClient *this, REFIID riid, VOID **ppvInterface )
 {
-	if ( !memcmp( riid, &IID_IUnknown, sizeof( GUID ) ) || !memcmp( riid, &IID_IMMNotificationClient, sizeof( GUID ) ) ) 
+	if ( !memcmp( riid, &IID_IUnknown, sizeof( GUID ) ) || !memcmp( riid, &IID_IMMNotificationClient, sizeof( GUID ) ) )
 	{
 		*ppvInterface = (void**)this;
 		this->lpVtbl->AddRef( this );
@@ -502,7 +502,7 @@ static qboolean SNDDMA_InitWASAPI( void )
 		// because we will call Initialize() with hnsBufferDuration=0 to select minimal buffer size
 		REFERENCE_TIME defDuration;
 		iAudioClient->lpVtbl->GetDevicePeriod( iAudioClient, &defDuration, NULL );
-		Com_Printf( S_COLOR_CYAN "WASAPI buffer duration: %i.%i millisecons\n", 
+		Com_Printf( S_COLOR_CYAN "WASAPI buffer duration: %i.%i millisecons\n",
 			(int)(defDuration / 10000), (int)(( ( defDuration + 500 ) / 1000 ) % 10) );
 	}
 
@@ -529,7 +529,7 @@ static qboolean SNDDMA_InitWASAPI( void )
 	}
 
 	Com_DPrintf( "WASAPI buffer frame count: %i\n", bufferFrameCount );
-	
+
 	dma.submission_chunk = 1;
 	dma.buffer = buffer;
 	dma.isfloat = isfloat;
@@ -964,7 +964,7 @@ qboolean SNDDMA_InitDS( void )
 ==============
 SNDDMA_GetDMAPos
 
-return the current sample position (in mono samples read)
+return the current sample WRITE position (in mono samples)
 inside the recirculating dma buffer, so the mixing code will know
 how many sample are required to fill it up.
 ===============
@@ -983,19 +983,12 @@ int SNDDMA_GetDMAPos( void ) {
 	}
 #endif
 	if ( dsound_init ) {
-		MMTIME	mmtime;
-		int		s;
-		DWORD	dwWrite;
+		DWORD	dwWriteCursor;
 
-		mmtime.wType = TIME_SAMPLES;
-		pDSBuf->lpVtbl->GetCurrentPosition( pDSBuf, &mmtime.u.sample, &dwWrite );
+		// write position is the only safe position to start update
+		pDSBuf->lpVtbl->GetCurrentPosition(pDSBuf, NULL, &dwWriteCursor);
 
-		s = mmtime.u.sample;
-
-		s >>= sample16;
-		s &= ( dma.samples - 1 );
-
-		return s;
+        return ( dwWriteCursor >> sample16 ) & ( dma.samples - 1 );
 	}
 
 	return 0;

@@ -977,6 +977,8 @@ void CL_InitInput( void ) {
     Cvar_SetDescription( cl_nodelta, "Disable delta compression (slows net performance, not recommended)\nDefault: 0" );
     cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
     Cvar_SetDescription( cl_debugMove, "Used for debugging movement, shown in debug graph\nDefault: 0" );
+	cl_nodelta = Cvar_Get( "cl_nodelta", "0", CVAR_DEVELOPER );
+	cl_debugMove = Cvar_Get( "cl_debugMove", "0", 0 );
 
     cl_showSend = Cvar_Get( "cl_showSend", "0", CVAR_TEMP );
     Cvar_SetDescription( cl_showSend, "Show network packets as they are sent\nDefault: 0" );

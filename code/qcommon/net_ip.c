@@ -1581,7 +1581,7 @@ static qboolean NET_GetCvars( void ) {
     Cvar_SetDescription(net_port, "Set port number server will use if you want to run more than one instance\nDefault: 27960");
     modified += net_port->modified;
 	net_port->modified = qfalse;
-	
+
 #ifdef USE_IPV6
 	net_ip6 = Cvar_Get( "net_ip6", "::", CVAR_LATCH );
     Cvar_SetDescription(net_ip6, "The IPv6 of the local machine\nDefault: :: (bind all)");

@@ -3422,7 +3422,7 @@ static void CL_ShutdownRef( qboolean unloadDLL ) {
 		unloadDLL = qtrue;
 	}
 #endif
-	
+
 	if ( re.Shutdown ) {
 		if ( unloadDLL )
 			re.Shutdown( REF_UNLOAD_DLL );
@@ -5121,7 +5121,7 @@ static void CL_Ping_f( void ) {
 		else
 			Com_Printf( "warning: only -4 as address type understood.\n");
 #endif
-		
+
 		server = Cmd_Argv(2);
 	}
 

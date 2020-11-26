@@ -531,7 +531,7 @@ void Con_Linefeed( console_t* console, qboolean skipnotify )
 	Con_Fixup(console);
 }
 
-void writeTextToConsole(console_t* console, char* txt, qboolean skipnotify) 
+void writeTextToConsole(console_t* console, char* txt, qboolean skipnotify)
 {
 	int		y;
 	int		c, l;
@@ -638,7 +638,7 @@ void CL_ConsolePrint( char *txt ) {
 	if ( cl_noprint && cl_noprint->integer ) {
 		return;
 	}
-	
+
 	for (i = 0; i < numConsoles + 1; i++) {
 		if (!consoles[i].initialized) {
 			consoles[i].color[0] =

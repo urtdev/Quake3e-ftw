@@ -1091,7 +1091,7 @@ static void FS_RemoveFromHandleList( pack_t *pak )
 
 	pak->next_h = NULL;
 	pak->prev_h = NULL;
-	
+
 	hpaksCount--;
 
 #ifdef _DEBUG
@@ -1126,7 +1126,7 @@ static void FS_AddToHandleList( pack_t *pak )
 		unzClose( pk->handle );
 		pk->handle = NULL;
 		FS_RemoveFromHandleList( pk );
-	} 
+	}
 
 	if ( hhead == NULL ) {
 		pak->next_h = pak;
@@ -1201,7 +1201,7 @@ FS_ResetReadOnlyAttribute
 */
 qboolean FS_ResetReadOnlyAttribute( const char *filename ) {
 	char *ospath;
-	
+
 	ospath = FS_BuildOSPath( fs_homepath->string, fs_gamedir, filename );
 
 	return Sys_ResetReadOnlyAttribute( ospath );

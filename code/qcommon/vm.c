@@ -1266,7 +1266,7 @@ const char *VM_CheckInstructions( instruction_t *buf,
 				}
 				if ( buf[v].op == OP_ENTER ) {
 					n = buf[v].op;
-					sprintf( errBuf, "jump target %i has bad opcode %s", v, opname[ n ] ); 
+					sprintf( errBuf, "jump target %i has bad opcode %s", v, opname[ n ] );
 					return errBuf;
 				}
 				if ( v == (i-1) ) {
@@ -1627,7 +1627,7 @@ static void * QDECL VM_LoadDll( const char *name, dllSyscall_t *entryPoint, dllS
 
 	Com_Printf( "VM_LoadDLL '%s' ok\n", filename );
 
-	dllEntry = /* ( dllEntry_t ) */ Sys_LoadFunction( libHandle, "dllEntry" ); 
+	dllEntry = /* ( dllEntry_t ) */ Sys_LoadFunction( libHandle, "dllEntry" );
 	*entryPoint = /* ( dllSyscall_t ) */ Sys_LoadFunction( libHandle, "vmMain" );
 	if ( !*entryPoint || !dllEntry ) {
 		Sys_UnloadLibrary( libHandle );
@@ -1933,7 +1933,7 @@ static int QDECL VM_ProfileSort( const void *a, const void *b ) {
 VM_NameToVM
 ==============
 */
-static vm_t *VM_NameToVM( const char *name ) 
+static vm_t *VM_NameToVM( const char *name )
 {
 	vmIndex_t index;
 

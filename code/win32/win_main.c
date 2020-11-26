@@ -650,7 +650,7 @@ SetDPIAwareness
 ==================
 */
 #if 0
-static void SetDPIAwareness( void ) 
+static void SetDPIAwareness( void )
 {
 	typedef HANDLE (WINAPI *pfnSetThreadDpiAwarenessContext)( HANDLE dpiContext );
 	typedef HRESULT (WINAPI *pfnSetProcessDpiAwareness)( int value );
