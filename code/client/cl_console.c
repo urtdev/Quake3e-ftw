@@ -391,7 +391,7 @@ void Con_Init( void )
     con_conspeed = Cvar_Get( "scr_conspeed", "3", 0 );
     Cvar_SetDescription( con_conspeed, "Set how fast the console goes up and down\nDefault: 3 seconds" );
 
-    con_timestamp = Cvar_Get( "con_timestamp", "1", CVAR_ARCHIVE );
+    con_timestamp = Cvar_Get( "con_timestamp", "0", CVAR_ARCHIVE_ND );
 
 	Field_Clear( &g_consoleField );
 	g_consoleField.widthInChars = g_console_field_width;
@@ -622,8 +622,18 @@ void CL_ConsolePrint( char *txt ) {
     if (currentCon->x==0 && con_timestamp && con_timestamp->integer) {
         char txtt[MAXPRINTMSG];
         qtime_t	now;
+		char* message;
+		message = txt;
+
         Com_RealTime( &now );
-        Com_sprintf(txtt,sizeof(txtt),"^9%02d:%02d:%02d ^7%s",now.tm_hour,now.tm_min,now.tm_sec,txt);
+		if (txt[0] == 17 || txt[0] == 18 || txt[0] == 19) {
+			message++;
+			Com_sprintf(txtt, sizeof(txtt), "%c^9%02d:%02d:%02d ^7%s", txt[0], now.tm_hour, now.tm_min, now.tm_sec, message);
+		}
+		else {
+			Com_sprintf(txtt, sizeof(txtt), "^9%02d:%02d:%02d ^7%s", now.tm_hour, now.tm_min, now.tm_sec, txt);
+		}
+        
         strcpy(txt,txtt);
     }
 

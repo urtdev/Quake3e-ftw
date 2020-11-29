@@ -3905,32 +3905,30 @@ typedef struct vidmode_s
 
 static const vidmode_t cl_vidModes[] =
 {
-	{ "Mode  0: 320x240",			320,	240,	1 },
-	{ "Mode  1: 400x300",			400,	300,	1 },
-	{ "Mode  2: 512x384",			512,	384,	1 },
-	{ "Mode  3: 640x480",			640,	480,	1 },
-	{ "Mode  4: 800x600",			800,	600,	1 },
-	{ "Mode  5: 960x720",			960,	720,	1 },
-	{ "Mode  6: 1024x768",			1024,	768,	1 },
-	{ "Mode  7: 1152x864",			1152,	864,	1 },
-	{ "Mode  8: 1280x1024 (5:4)",	1280,	1024,	1 },
-	{ "Mode  9: 1600x1200",			1600,	1200,	1 },
-	{ "Mode 10: 2048x1536",			2048,	1536,	1 },
-	{ "Mode 11: 856x480 (wide)",	856,	480,	1 },
-	// extra modes:
-	{ "Mode 12: 1280x960",			1280,	960,	1 },
-	{ "Mode 13: 1280x720",			1280,	720,	1 },
-	{ "Mode 14: 1280x800 (16:10)",	1280,	800,	1 },
-	{ "Mode 15: 1366x768",			1366,	768,	1 },
-	{ "Mode 16: 1440x900 (16:10)",	1440,	900,	1 },
-	{ "Mode 17: 1600x900",			1600,	900,	1 },
+    { "Mode  0: 320x240 (4:3)",		320,	240,	1 },
+    { "Mode  1: 400x300 (4:3)",		400,	300,	1 },
+    { "Mode  2: 512x384 (4:3)",		512,	384,	1 },
+    { "Mode  3: 640x480 (4:3)",		640,	480,	1 },
+    { "Mode  4: 800x600 (4:3)",		800,	600,	1 },
+    { "Mode  5: 960x720 (4:3)",		960,	720,	1 },
+    { "Mode  6: 1024x768 (4:3)",	1024,	768,	1 },
+    { "Mode  7: 1152x864 (4:3)",	1152,	864,	1 },
+    { "Mode  8: 1280x1024 (5:4)",	1280,	1024,	1 },
+    { "Mode  9: 1600x1200 (4:3)",	1600,	1200,	1 },
+    { "Mode 10: 2048x1536 (4:3)",	2048,	1536,	1 },
+    { "Mode 11: 856x480 (wide)",	856,	480,	1 },
+    { "Mode 12: 1280x720 (wide)",	1280, 	720,	1 },
+    { "Mode 13: 1366x768 (wide)",	1366,	768,	1 },
+    { "Mode 14: 1600x900 (wide)",	1600,	900,	1 },
+    { "Mode 15: 1680x1050 (wide)",	1680,	1050,	1 },
+    { "Mode 16: 1920x1080 (wide)",	1920,	1080,	1 },
+    { "Mode 17: 2560x1440 (wide)",	2560,	1440,	1 },
 	{ "Mode 18: 1680x1050 (16:10)",	1680,	1050,	1 },
-	{ "Mode 19: 1920x1080",			1920,	1080,	1 },
-	{ "Mode 20: 1920x1200 (16:10)",	1920,	1200,	1 },
-	{ "Mode 21: 2560x1080 (21:9)",	2560,	1080,	1 },
-	{ "Mode 22: 3440x1440 (21:9)",	3440,	1440,	1 },
-	{ "Mode 23: 3840x2160",			3840,	2160,	1 },
-	{ "Mode 24: 4096x2160 (4K)",	4096,	2160,	1 }
+	{ "Mode 19: 1920x1200 (16:10)",	1920,	1200,	1 },
+	{ "Mode 20: 2560x1080 (21:9)",	2560,	1080,	1 },
+	{ "Mode 21: 3440x1440 (21:9)",	3440,	1440,	1 },
+	{ "Mode 22: 3840x2160 (16:9)",	3840,	2160,	1 },
+	{ "Mode 23: 4096x2160 (4K)",	4096,	2160,	1 }
 };
 static const int s_numVidModes = ARRAY_LEN( cl_vidModes );
 
@@ -4157,7 +4155,7 @@ void CL_Init( void ) {
     cl_lastServerAddress = Cvar_Get("cl_lastServerAddress", "", CVAR_ROM | CVAR_PROTECTED );
 	Cvar_SetDescription(cl_lastServerAddress, "Last server you were connected to.");
 
-	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ARCHIVE );
+	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ROM | CVAR_PROTECTED );
     Cvar_SetDescription(cl_allowDownload, "Toggle automatic downloading of maps, models, sounds, and textures\n1 - allow downloads\n2 - disallow redirects, must download from the same server\n4 - Disallow UDP downloads\n8 - don't disconnect clients while they are downloading\nDefault: 1");
 #ifdef USE_CURL
 	cl_mapAutoDownload = Cvar_Get( "cl_mapAutoDownload", "1", CVAR_ARCHIVE );
