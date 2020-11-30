@@ -3,9 +3,9 @@ stages:
 
 build-windows-32bit-client:
   stage: build
-  image: dockcross/windows-x86
+  image: thewtex/cross-compiler-windows-x86
   script:
-    - make ARCH=x86 BUILD_CLIENT=1
+    - make ARCH=x86 BUILD_CLIENT=1 BUILD_SERVER=0
     - ls -l build/release-mingw32-x86_64
   artifacts:
     paths:

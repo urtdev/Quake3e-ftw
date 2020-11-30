@@ -31,7 +31,7 @@ USE_AUTH           = 1
 USE_URT_DEMO       = 1
 NO_DMAHD           = 0
 
-USE_RENDERER_DLOPEN = 1
+USE_RENDERER_DLOPEN = 0
 
 CNAME            = quake3e
 DNAME            = quake3e.ded
