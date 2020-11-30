@@ -2496,7 +2496,7 @@ void CL_InitDownloads( void ) {
         #ifdef USE_CURL
             CL_FirstDownload();
         #else
-			CL_NextDownload()
+			CL_NextDownload();
         #endif
 			return;
 		}
