@@ -756,7 +756,7 @@ void CL_CheckDemoProtocol( void ) {
         if (ext && !Q_stricmpn(ext + 1, URTDEMOEXT, ARRAY_LEN(URTDEMOEXT) - 1))
             clc.demoprotocol = URT_PROTOCOL_VERSION;
         else if (ext && !Q_stricmpn(ext + 1, DEMOEXT, ARRAY_LEN(DEMOEXT) - 1))
-            clc.demoprotocol = clc.demoprotocol = atoi(ext + ARRAY_LEN(DEMOEXT));
+            clc.demoprotocol = atoi(ext + ARRAY_LEN(DEMOEXT));
     }
 }
 
