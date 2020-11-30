@@ -22,7 +22,7 @@ endif
 #BUILD_SERVER     = 1
 
 USE_SDL            = 0
-USE_CURL           = 1
+USE_CURL           = 0
 USE_LOCAL_HEADERS  = 0
 USE_VULKAN         = 1
 USE_SYSTEM_JPEG    = 0
