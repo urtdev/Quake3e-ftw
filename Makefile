@@ -18,11 +18,11 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
   endif
 endif
 
-#BUILD_CLIENT     = 1
-#BUILD_SERVER     = 1
+BUILD_CLIENT     = 1
+BUILD_SERVER     = 0
 
 USE_SDL            = 0
-USE_CURL           = 0
+USE_CURL           = 1
 USE_LOCAL_HEADERS  = 0
 USE_VULKAN         = 1
 USE_SYSTEM_JPEG    = 0
@@ -30,10 +30,12 @@ USE_VULKAN_API     = 1
 USE_AUTH           = 1
 USE_URT_DEMO       = 1
 NO_DMAHD           = 0
+USE_FTWGL          = 0
+USE_SERVER_DEMO    = 1
 
 USE_RENDERER_DLOPEN = 0
 
-CNAME            = quake3e
+CNAME            = ftwgl-20210128
 DNAME            = quake3e.ded
 
 RENDERER_PREFIX  = $(CNAME)
@@ -148,13 +150,13 @@ ifndef USE_CURL_DLOPEN
   endif
 endif
 
-ifneq ($(USE_RENDERER_DLOPEN),0)
-USE_VULKAN=1
-endif
-
-ifneq ($(USE_VULKAN),0)
-USE_VULKAN_API=1
-endif
+#ifneq ($(USE_RENDERER_DLOPEN),0)
+#USE_VULKAN=1
+#endif
+#
+#ifneq ($(USE_VULKAN),0)
+#USE_VULKAN_API=1
+#endif
 
 
 #############################################################################
@@ -166,9 +168,11 @@ CDIR=$(MOUNT_DIR)/client
 SDIR=$(MOUNT_DIR)/server
 RCDIR=$(MOUNT_DIR)/renderercommon
 R1DIR=$(MOUNT_DIR)/renderer
+R2DIR=$(MOUNT_DIR)/renderer2
 RVDIR=$(MOUNT_DIR)/renderervk
 RVSDIR=$(MOUNT_DIR)/renderervk/shaders/spirv
 SDLDIR=$(MOUNT_DIR)/sdl
+TOOLSDIR=$(MOUNT_DIR)/tools
 
 CMDIR=$(MOUNT_DIR)/qcommon
 UDIR=$(MOUNT_DIR)/unix
@@ -279,6 +283,14 @@ endif
 
 ifeq ($(GENERATE_DEPENDENCIES),1)
   BASE_CFLAGS += -MMD
+endif
+
+ifeq ($(USE_FTWGL),1)
+  BASE_CFLAGS += -DUSE_FTWGL
+endif
+
+ifeq ($(USE_SERVER_DEMO),1)
+  BASE_CFLAGS += -DUSE_SERVER_DEMO
 endif
 
 ## Defaults
@@ -499,6 +511,7 @@ endif # !MINGW
 TARGET_CLIENT = $(CNAME)$(ARCHEXT)$(BINEXT)
 
 TARGET_REND1 = $(RENDERER_PREFIX)_opengl_$(SHLIBNAME)
+TARGET_REND2 = $(RENDERER_PREFIX)_opengl2_$(SHLIBNAME)
 TARGET_RENDV = $(RENDERER_PREFIX)_vulkan_$(SHLIBNAME)
 
 TARGET_SERVER = $(DNAME)$(ARCHEXT)$(BINEXT)
@@ -513,6 +526,7 @@ ifneq ($(BUILD_CLIENT),0)
   TARGETS += $(B)/$(TARGET_CLIENT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
     TARGETS += $(B)/$(TARGET_REND1)
+    TARGETS += $(B)/$(TARGET_REND2)
     TARGETS += $(B)/$(TARGET_RENDV)
   endif
 endif
@@ -535,6 +549,12 @@ endef
 define DO_REND_CC
 $(echo_cmd) "REND_CC $<"
 $(Q)$(CC) $(RENDCFLAGS) $(CFLAGS) -o $@ -c $<
+endef
+
+define DO_REF_STR
+$(echo_cmd) "REF_STR $<"
+$(Q)rm -f $@
+$(Q)$(STRINGIFY) $< $@
 endef
 
 define DO_BOT_CC
@@ -648,8 +668,24 @@ makedirs:
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
 	@if [ ! -d $(B)/rend1 ];then $(MKDIR) $(B)/rend1;fi
+	@if [ ! -d $(B)/rend2 ];then $(MKDIR) $(B)/rend2;fi
+	@if [ ! -d $(B)/rend2/glsl ];then $(MKDIR) $(B)/rend2/glsl;fi
 	@if [ ! -d $(B)/rendv ];then $(MKDIR) $(B)/rendv;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
+	@if [ ! -d $(B)/tools ];then $(MKDIR) $(B)/tools;fi
+
+TOOLS_OPTIMIZE = -g -Wall -fno-strict-aliasing
+TOOLS_CFLAGS += $(TOOLS_OPTIMIZE) \
+                -DTEMPDIR=\"$(TEMPDIR)\" -DSYSTEM=\"\" \
+                -I$(Q3LCCSRCDIR) \
+                -I$(LBURGDIR)
+
+TOOLS_BINEXT=.exe
+STRINGIFY   = $(B)/tools/stringify$(TOOLS_BINEXT)
+
+$(STRINGIFY): $(TOOLSDIR)/stringify.c
+	$(echo_cmd) "CC $@"
+	$(Q)$(CC) $(TOOLS_CFLAGS) -o $@ $(TOOLSDIR)/stringify.c
 
 #############################################################################
 # CLIENT/SERVER
@@ -693,6 +729,82 @@ ifneq ($(USE_RENDERER_DLOPEN), 0)
     $(B)/rend1/q_shared.o \
     $(B)/rend1/puff.o \
     $(B)/rend1/q_math.o
+endif
+
+Q3REND2OBJ = \
+  $(B)/rend2/tr_animation.o \
+  $(B)/rend2/tr_backend.o \
+  $(B)/rend2/tr_bsp.o \
+  $(B)/rend2/tr_cmds.o \
+  $(B)/rend2/tr_curve.o \
+  $(B)/rend2/tr_dsa.o \
+  $(B)/rend2/tr_extramath.o \
+  $(B)/rend2/tr_extensions.o \
+  $(B)/rend2/tr_fbo.o \
+  $(B)/rend2/tr_flares.o \
+  $(B)/rend2/tr_font.o \
+  $(B)/rend2/tr_glsl.o \
+  $(B)/rend2/tr_image.o \
+  $(B)/rend2/tr_image_bmp.o \
+  $(B)/rend2/tr_image_jpg.o \
+  $(B)/rend2/tr_image_pcx.o \
+  $(B)/rend2/tr_image_png.o \
+  $(B)/rend2/tr_image_tga.o \
+  $(B)/rend2/tr_image_dds.o \
+  $(B)/rend2/tr_init.o \
+  $(B)/rend2/tr_light.o \
+  $(B)/rend2/tr_main.o \
+  $(B)/rend2/tr_marks.o \
+  $(B)/rend2/tr_mesh.o \
+  $(B)/rend2/tr_model.o \
+  $(B)/rend2/tr_model_iqm.o \
+  $(B)/rend2/tr_noise.o \
+  $(B)/rend2/tr_postprocess.o \
+  $(B)/rend2/tr_scene.o \
+  $(B)/rend2/tr_shade.o \
+  $(B)/rend2/tr_shade_calc.o \
+  $(B)/rend2/tr_shader.o \
+  $(B)/rend2/tr_shadows.o \
+  $(B)/rend2/tr_sky.o \
+  $(B)/rend2/tr_surface.o \
+  $(B)/rend2/tr_vbo.o \
+  $(B)/rend2/tr_world.o
+
+Q3R2STRINGOBJ = \
+  $(B)/rend2/glsl/bokeh_fp.o \
+  $(B)/rend2/glsl/bokeh_vp.o \
+  $(B)/rend2/glsl/calclevels4x_fp.o \
+  $(B)/rend2/glsl/calclevels4x_vp.o \
+  $(B)/rend2/glsl/depthblur_fp.o \
+  $(B)/rend2/glsl/depthblur_vp.o \
+  $(B)/rend2/glsl/dlight_fp.o \
+  $(B)/rend2/glsl/dlight_vp.o \
+  $(B)/rend2/glsl/down4x_fp.o \
+  $(B)/rend2/glsl/down4x_vp.o \
+  $(B)/rend2/glsl/fogpass_fp.o \
+  $(B)/rend2/glsl/fogpass_vp.o \
+  $(B)/rend2/glsl/generic_fp.o \
+  $(B)/rend2/glsl/generic_vp.o \
+  $(B)/rend2/glsl/lightall_fp.o \
+  $(B)/rend2/glsl/lightall_vp.o \
+  $(B)/rend2/glsl/pshadow_fp.o \
+  $(B)/rend2/glsl/pshadow_vp.o \
+  $(B)/rend2/glsl/shadowfill_fp.o \
+  $(B)/rend2/glsl/shadowfill_vp.o \
+  $(B)/rend2/glsl/shadowmask_fp.o \
+  $(B)/rend2/glsl/shadowmask_vp.o \
+  $(B)/rend2/glsl/ssao_fp.o \
+  $(B)/rend2/glsl/ssao_vp.o \
+  $(B)/rend2/glsl/texturecolor_fp.o \
+  $(B)/rend2/glsl/texturecolor_vp.o \
+  $(B)/rend2/glsl/tonemap_fp.o \
+  $(B)/rend2/glsl/tonemap_vp.o
+
+ifneq ($(USE_RENDERER_DLOPEN), 0)
+  Q3REND2OBJ += \
+      $(B)/rend2/q_shared.o \
+      $(B)/rend2/puff.o \
+      $(B)/rend2/q_math.o
 endif
 
 Q3RENDVOBJ = \
@@ -918,7 +1030,8 @@ ifneq ($(USE_RENDERER_DLOPEN),1)
   ifeq ($(USE_VULKAN),1)
     Q3OBJ += $(Q3RENDVOBJ)
   else
-    Q3OBJ += $(Q3REND1OBJ)
+    Q3OBJ += $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
+#    Q3OBJ += $(Q3REND1OBJ)
   endif
 endif
 
@@ -1019,6 +1132,10 @@ $(B)/$(TARGET_CLIENT): $(Q3OBJ)
 $(B)/$(TARGET_REND1): $(Q3REND1OBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3REND1OBJ)
+
+$(B)/$(TARGET_REND2): $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
+	$(echo_cmd) "LD $@"
+	$(Q)$(CC) $(SHLIBCFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3REND2OBJ) $(Q3R2STRINGOBJ)
 
 $(B)/$(TARGET_RENDV): $(Q3RENDVOBJ)
 	$(echo_cmd) "LD $@"
@@ -1159,6 +1276,21 @@ $(B)/rend1/%.o: $(RCDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rend1/%.o: $(CMDIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/glsl/%.c: $(R2DIR)/glsl/%.glsl $(STRINGIFY)
+	$(DO_REF_STR)
+
+$(B)/rend2/glsl/%.o: $(B)/rend2/glsl/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(RCDIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(R2DIR)/%.c
+	$(DO_REND_CC)
+
+$(B)/rend2/%.o: $(CMDIR)/%.c
 	$(DO_REND_CC)
 
 $(B)/rendv/%.o: $(RVDIR)/%.c

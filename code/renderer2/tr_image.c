@@ -2528,7 +2528,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, imgFlags_t flags )
 #endif
 
 			R_CreateImage( normalName, normalPic, normalWidth, normalHeight, IMGTYPE_NORMAL, normalFlags, 0 );
-			ri.Free( normalPic );	
+			ri.Free( normalPic );
 		}
 	}
 

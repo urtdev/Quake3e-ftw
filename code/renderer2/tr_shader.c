@@ -1996,12 +1996,11 @@ static qboolean ParseShader( const char **text )
 			if (isGL2Sun)
 			{
 				token = COM_ParseExt( text, qfalse );
-				tr.sunShadowScale = atof(token);
+				tr.sunLightScale = atof(token);
 
 				// parse twice, since older shaders may include mapLightScale before sunShadowScale
 				token = COM_ParseExt( text, qfalse );
-				if (token[0])
-					tr.sunShadowScale = atof(token);
+                tr.sunShadowScale = atof(token);
 			}
 
 			SkipRestOfLine( text );

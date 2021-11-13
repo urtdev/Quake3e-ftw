@@ -3641,8 +3641,8 @@ void Com_Init( char *commandLine ) {
 #ifndef DEDICATED
 	com_maxfps = Cvar_Get( "com_maxfps", "125", CVAR_PROTECTED); // try to force that in some light way
     com_maxfpsUnfocused = Cvar_Get( "com_maxfpsUnfocused", "0", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( com_maxfps, "0", "1000", CV_INTEGER );
-	Cvar_CheckRange( com_maxfpsUnfocused, "0", "1000", CV_INTEGER );
+	Cvar_CheckRange( com_maxfps, "0", "333", CV_INTEGER );
+	Cvar_CheckRange( com_maxfpsUnfocused, "0", "333", CV_INTEGER );
     Cvar_SetDescription(com_maxfps, "Set the max number of frames per second across the whole system, client and server\nDefault: 125");
     Cvar_SetDescription(com_maxfpsUnfocused, "Set the max number of frames per second when the client is minimized or not in the background\nDefault: 60");
 
@@ -3721,7 +3721,7 @@ void Com_Init( char *commandLine ) {
 #ifndef DEDICATED
 	com_introPlayed = Cvar_Get( "com_introplayed", "0", CVAR_ARCHIVE );
     Cvar_SetDescription( com_introPlayed, "Toggle displaying of intro cinematic once it has been seen this variable keeps it from playing each time\nDefault: 0" );
-	com_skipIdLogo  = Cvar_Get( "com_skipIdLogo", "0", CVAR_ARCHIVE );
+	com_skipIdLogo  = Cvar_Get( "com_skipIdLogo", "1", CVAR_ARCHIVE );
     Cvar_SetDescription(com_skipIdLogo, "Toggle skip playing the intro logo cinematic for the game\nDefault: 0");
 
 #endif
@@ -3752,7 +3752,7 @@ void Com_Init( char *commandLine ) {
 
 	s = va( "%s %s %s", Q3_VERSION, PLATFORM_STRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_PROTECTED | CVAR_ROM | CVAR_SERVERINFO );
-    Cvar_SetDescription(com_version, "Set the engine verion so it can be distinguished from similar clients");
+    Cvar_SetDescription(com_version, "Set the engine version so it can be distinguished from similar clients");
 
     // this cvar is the single entry point of the entire extension system
 	Cvar_Get( "//trap_GetValue", va( "%i", COM_TRAP_GETVALUE ), CVAR_PROTECTED | CVAR_ROM );

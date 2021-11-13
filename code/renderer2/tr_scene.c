@@ -340,7 +340,7 @@ void RE_BeginScene(const refdef_t *fd)
 		if (r_forceSun->integer)
 			VectorScale(tr.sunLight, scale * r_forceSunLightScale->value, tr.refdef.sunCol);
 		else
-			VectorScale(tr.sunLight, scale, tr.refdef.sunCol);
+			VectorScale(tr.sunLight, scale * tr.sunLightScale, tr.refdef.sunCol);
 
 		if (r_sunlightMode->integer == 1)
 		{

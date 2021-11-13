@@ -4070,7 +4070,7 @@ static void CL_InitGLimp_Cvars( void )
 	if ( !isValidRenderer( cl_renderer->string ) ) {
 		Cvar_ForceReset( "cl_renderer" );
 	}
-    Cvar_SetDescription(cl_renderer, "Set the name of the dynamically linked renderer\nDefault: opengl2");
+    Cvar_SetDescription(cl_renderer, "Set the name of the dynamically linked renderer\nDefault: opengl");
 #endif
 }
 
@@ -4215,7 +4215,7 @@ void CL_Init( void ) {
     #endif
 
 	// userinfo
-#ifdef USE_FTWGL_TICKET
+#ifdef USE_FTWGL
 	Cvar_Get("ticket", "", CVAR_USERINFO | CVAR_TEMP);
 #endif
     Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE );

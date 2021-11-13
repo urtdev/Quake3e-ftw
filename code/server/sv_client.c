@@ -713,6 +713,15 @@ gotnewcl:
 	// init the netchan queue
 	newcl->netchan_end_queue = &newcl->netchan_start_queue;
 
+#ifdef USE_SERVER_DEMO
+    // clear server-side demo recording
+    newcl->demo_recording = qfalse;
+    newcl->demo_file = -1;
+    newcl->demo_waiting = qfalse;
+    newcl->demo_backoff = 1;
+    newcl->demo_deltas = 0;
+#endif
+
 	// save the userinfo
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
@@ -830,6 +839,13 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 		SV_SendServerCommand( NULL, "print \"%s" S_COLOR_WHITE " %s\n\"", name, reason );
 	}
 
+#ifdef USE_SERVER_DEMO
+    if (drop->demo_recording) {
+	    // stop the server side demo if we were recording this client
+       Cbuf_ExecuteText(EXEC_NOW, va("stopserverdemo %d", (int)(drop - svs.clients)));
+	}
+#endif
+
 	// call the prog function for removing a client
 	// this will remove the body, among other things
 	VM_Call( gvm, 1, GAME_CLIENT_DISCONNECT, drop - svs.clients );
@@ -917,10 +933,12 @@ void SV_Auth_DropClient( client_t *drop, const char *reason, const char *message
 //		drop->download = 0;
 //	}
 
-	/*if (drop->demo_recording) {
-        // stop the server side demo if we were recording this client
+#ifdef USE_SERVER_DEMO
+    if (drop->demo_recording) {
+	    // stop the server side demo if we were recording this client
        Cbuf_ExecuteText(EXEC_NOW, va("stopserverdemo %d", (int)(drop - svs.clients)));
-    }*/
+	}
+#endif
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things

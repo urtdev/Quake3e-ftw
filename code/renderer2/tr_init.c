@@ -45,8 +45,6 @@ cvar_t	*r_railSegmentLength;
 
 cvar_t	*r_ignore;
 
-cvar_t  *r_displayRefresh;
-
 cvar_t	*r_detailTextures;
 
 cvar_t	*r_znear;
@@ -1074,7 +1072,7 @@ void R_Register( void )
 			"0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_max_anisotropy = ri.Cvar_Get( "r_ext_max_anisotropy", "2", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_picmip = ri.Cvar_Get ("r_picmip", "1", CVAR_PROTECTED );
+	r_picmip = ri.Cvar_Get ("r_picmip", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_roundImagesDown = ri.Cvar_Get ("r_roundImagesDown", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_colorMipLevels = ri.Cvar_Get ("r_colorMipLevels", "0", CVAR_LATCH );
 	ri.Cvar_CheckRange( r_picmip, "0", "16", CV_INTEGER );
@@ -1154,8 +1152,6 @@ void R_Register( void )
 	//
 	// temporary latched variables that can only change over a restart
 	//
-	r_displayRefresh = ri.Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
-	ri.Cvar_CheckRange( r_displayRefresh, "0", "250", CV_INTEGER );
 	r_fullbright = ri.Cvar_Get ("r_fullbright", "0", CVAR_LATCH|CVAR_CHEAT );
 	r_mapOverBrightBits = ri.Cvar_Get ("r_mapOverBrightBits", "2", CVAR_LATCH );
 	r_intensity = ri.Cvar_Get ("r_intensity", "1", CVAR_LATCH );
@@ -1245,31 +1241,14 @@ void R_Register( void )
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
 	ri.Cmd_AddCommand( "imagelist", R_ImageList_f );
-    ri.Cmd_SetDescription( "imagelist", "List currently open images/textures used by the map\nusage: imagelist" );
-
-    ri.Cmd_AddCommand( "shaderlist", R_ShaderList_f );
-    ri.Cmd_SetDescription( "shaderlist", "List currently used shaders by the map\nusage: shaderlist" );
-
-    ri.Cmd_AddCommand( "skinlist", R_SkinList_f );
-    ri.Cmd_SetDescription( "skinlist", "List currently used skins by the map\nusage: shaderlist" );
-
-    ri.Cmd_AddCommand( "modellist", R_Modellist_f );
-    ri.Cmd_SetDescription( "modellist", "List currently used models by the map\nusage: shaderlist" );
-
-    ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
-    ri.Cmd_SetDescription( "screenshot", "Take a screenshot of the current frame\nusage: screenshot [silent] [filename]" );
-
-    ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShotJPEG_f );
-    ri.Cmd_SetDescription( "screenshotJPEG", "Take a screenshot of the current frame and output JPEG as the format\nusage: screenshotJPEG [silent] [filename]" );
-
-    ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
-    ri.Cmd_SetDescription( "gfxinfo", "Returns extensive information about video settings\nusage: gfxinfo");
-
-    ri.Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
-    ri.Cmd_SetDescription( "gfxmeminfo", "Returns extensive memory information\nusage: gfxmeminfo");
-
-    ri.Cmd_AddCommand( "exportCubemaps", R_ExportCubemaps_f );
-    ri.Cmd_SetDescription( "exportCubemaps", "Export a DDS file of graphics loaded as a cubemap\nusage: exportCubemaps");
+	ri.Cmd_AddCommand( "shaderlist", R_ShaderList_f );
+	ri.Cmd_AddCommand( "skinlist", R_SkinList_f );
+	ri.Cmd_AddCommand( "modellist", R_Modellist_f );
+	ri.Cmd_AddCommand( "screenshot", R_ScreenShot_f );
+	ri.Cmd_AddCommand( "screenshotJPEG", R_ScreenShotJPEG_f );
+	ri.Cmd_AddCommand( "gfxinfo", GfxInfo_f );
+	ri.Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
+	ri.Cmd_AddCommand( "exportCubemaps", R_ExportCubemaps_f );
 }
 
 void R_InitQueries(void)
@@ -1445,6 +1424,30 @@ void RE_Shutdown( int destroyWindow ) {
 
 	tr.registered = qfalse;
 }
+
+// for modular renderer
+#ifdef USE_RENDERER_DLOPEN
+void QDECL Com_Error( errorParm_t code, const char *fmt, ... )
+{
+	char buf[ 4096 ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+	ri.Error( code, "%s", buf );
+}
+
+void QDECL Com_Printf( const char *fmt, ... )
+{
+	char buf[ MAXPRINTMSG ];
+	va_list	argptr;
+	va_start( argptr, fmt );
+	Q_vsnprintf( buf, sizeof( buf ), fmt, argptr );
+	va_end( argptr );
+
+	ri.Printf( PRINT_ALL, "%s", buf );
+}
+#endif
 
 
 /*

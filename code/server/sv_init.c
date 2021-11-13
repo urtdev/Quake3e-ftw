@@ -623,6 +623,12 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// create a baseline for more efficient communications
 	SV_CreateBaseline();
 
+#ifdef USE_SERVER_DEMO
+    // stop server-side demo (if any)
+	if (com_dedicated->integer)
+		Cbuf_ExecuteText(EXEC_NOW, "stopserverdemo all");
+#endif
+
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// send the new gamestate to all connected clients
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
@@ -916,6 +922,11 @@ void SV_Init( void )
 
     sv_strictAuth = Cvar_Get ("sv_strictAuth", "1", CVAR_ARCHIVE );
 
+#ifdef USE_SERVER_DEMO
+    sv_demonotice = Cvar_Get ("sv_demonotice", "", CVAR_ARCHIVE);
+	sv_demofolder = Cvar_Get ("sv_demofolder", "serverdemos", CVAR_ARCHIVE );
+#endif
+
 #ifdef USE_AUTH
     sv_authServerIP = Cvar_Get("sv_authServerIP", "", CVAR_TEMP | CVAR_ROM);
 	sv_auth_engine = Cvar_Get("sv_auth_engine", "1", CVAR_ROM);
@@ -1006,6 +1017,11 @@ void SV_Shutdown( const char *finalmsg ) {
 	}
 
 	Com_Printf( "----- Server Shutdown (%s) -----\n", finalmsg );
+
+#if USE_SERVER_DEMO
+    if (com_dedicated->integer)
+		Cbuf_ExecuteText(EXEC_NOW, "stopserverdemo all");
+#endif
 
 #ifdef USE_IPV6
 	NET_LeaveMulticast6();

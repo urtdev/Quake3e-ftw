@@ -90,6 +90,11 @@ serverBan_t serverBans[SERVER_MAXBANS];
 int serverBansCount = 0;
 #endif
 
+#ifdef USE_SERVER_DEMO
+cvar_t	*sv_demonotice;				// notice to print to a client being recorded server-side
+cvar_t 	*sv_demofolder;				//@Barbatos - the name of the folder that contains server-side demos
+#endif
+
 /*
 =============================================================================
 

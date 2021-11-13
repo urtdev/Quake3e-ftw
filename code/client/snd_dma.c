@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "snd_dmahd.h"
 
-static void S_Update_( void );
+static void S_Update_( int msec );
 void S_UpdateBackgroundTrack( void );
 static void S_Base_StopAllSounds( void );
 static void S_Base_StopBackgroundTrack( void );
@@ -1525,9 +1525,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 			Cvar_ForceReset( "s_khz" );
 			break;
 	}
-
-	s_mixahead = Cvar_Get( "s_mixAhead", "0.2", CVAR_ARCHIVE_ND );
-	Cvar_CheckRange( s_mixahead, "0.001", "0.5", CV_FLOAT );
 
 	s_mixOffset = Cvar_Get( "s_mixOffset", "0", CVAR_ARCHIVE_ND | CVAR_DEVELOPER );
 	Cvar_CheckRange( s_mixOffset, "0", "0.5", CV_FLOAT );

@@ -120,7 +120,15 @@ typedef struct {
 	void	(*VertexLighting)( qboolean allowed );
 	void	(*SyncRender)( void );
 
-
+    void  (*SetDvrFrame)( float x, float y, float height, float width );
+    void	(*ReloadShaders)( qboolean createNew );
+    qhandle_t  (*CreateShaderFromImageBytes)(const char* name, byte *pic, int width, int height);
+    void (*FastCapture)(byte *data);
+    void (*FastCaptureOld)(byte *captureBuffer, byte *encodeBuffer);
+    void (*UpdateMode)(glconfig_t *glconfigOut);
+    void (*UpdateModel)(const char *name);
+    void (*UpdateShader)(char *shaderName, int lightmapIndex);
+    void (*ResetBannerSpy)( void );
 } refexport_t;
 
 //

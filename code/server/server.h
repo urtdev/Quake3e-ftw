@@ -269,6 +269,14 @@ typedef struct client_s {
     } multiview;
 #endif // USE_MV
 
+#ifdef USE_SERVER_DEMO
+	qboolean	demo_recording;	// are we currently recording this client?
+	fileHandle_t	demo_file;	// the file we are writing the demo to
+	qboolean	demo_waiting;	// are we still waiting for the first non-delta frame?
+	int		demo_backoff;	// how many packets (-1 actually) between non-delta frames?
+	int		demo_deltas;	// how many delta frames did we let through so far?
+#endif
+
 } client_t;
 
 //=============================================================================
@@ -394,6 +402,11 @@ extern	serverBan_t serverBans[SERVER_MAXBANS];
 extern	int serverBansCount;
 #endif
 
+#ifdef USE_SERVER_DEMO
+extern	cvar_t	*sv_demonotice;
+extern  cvar_t  *sv_demofolder;
+#endif
+
 //===========================================================
 
 //
@@ -471,6 +484,10 @@ void SV_SetTargetClient( int clientNum );
 //
 void SV_Heartbeat_f( void );
 client_t *SV_GetPlayerByHandle( void );
+
+#ifdef USE_SERVER_DEMO
+void SVD_WriteDemoFile(const client_t*, const msg_t*);
+#endif
 
 #ifdef USE_MV
 void SV_LoadRecordCache( void );
