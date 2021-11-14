@@ -1685,6 +1685,8 @@ static void SV_NameServerDemo(char *filename, int length, const client_t *client
 
 static void SV_StartRecordOne(client_t *client, char *filename) {
 
+    char demoName[ MAX_QPATH ];
+
     char path[MAX_OSPATH];
 
     Com_DPrintf("SV_StartRecordOne\n");
@@ -1703,8 +1705,15 @@ static void SV_StartRecordOne(client_t *client, char *filename) {
         Com_Printf("startserverdemo: %s is a bot\n", client->name);
         return;
     }
-
-    SV_NameServerDemo(path, sizeof(path), client, filename);
+    Com_Printf("PATH: %s \n", path);
+    if (filename == NULL) {
+        qtime_t t;
+        Com_RealTime( &t );
+        sprintf( demoName, "ftw-%s-%02i%02i%02i-%02i%02i%02i", client->name, t.tm_year-100, t.tm_mon+1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec );
+    } else {
+        sprintf( demoName, "%s", filename );
+    }
+    Com_sprintf( path, sizeof( path ), "demos/%s.urtdemo", demoName );
     SVD_StartDemoFile(client, path);
 
     if(sv_demonotice->string) {
@@ -1822,7 +1831,7 @@ static void SV_StartServerDemo_f(void) {
         }
 
         if (Cmd_Argc() > 2) {
-            SV_StartRecordOne(client, Cmd_ArgsFrom(2));
+            SV_StartRecordOne(client, Cmd_Argv(2));
         } else {
             SV_StartRecordOne(client, NULL);
         }
