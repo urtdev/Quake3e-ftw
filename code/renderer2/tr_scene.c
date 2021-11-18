@@ -148,10 +148,10 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 		Com_Memcpy( poly->verts, &verts[numVerts*j], numVerts * sizeof( *verts ) );
 
 		if ( glConfig.hardwareType == GLHW_RAGEPRO ) {
-			poly->verts->modulate[0] = 255;
-			poly->verts->modulate[1] = 255;
-			poly->verts->modulate[2] = 255;
-			poly->verts->modulate[3] = 255;
+			poly->verts->modulate.rgba[0] = 255;
+			poly->verts->modulate.rgba[1] = 255;
+			poly->verts->modulate.rgba[2] = 255;
+			poly->verts->modulate.rgba[3] = 255;
 		}
 		// done.
 		r_numpolys++;
@@ -313,7 +313,7 @@ void RE_BeginScene(const refdef_t *fd)
 
 		// compare the area bits
 		areaDiff = 0;
-		for (i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++) {
+		for ( i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
 			areaDiff |= ((int *)tr.refdef.areamask)[i] ^ ((int *)fd->areamask)[i];
 			((int *)tr.refdef.areamask)[i] = ((int *)fd->areamask)[i];
 		}

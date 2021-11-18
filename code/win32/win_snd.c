@@ -26,13 +26,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 extern cvar_t *s_khz;
 
 static qboolean	dsound_init;
+static qboolean SNDDMA_InitDS( void );
 
 // Visual Studio 2012+ or MINGW
 #if ( _MSC_VER >= 1700 ) || defined(MINGW)
-#define USE_WASAPI
+#ifndef USE_WASAPI
+#define USE_WASAPI 1
+#endif
 #endif
 
-#ifdef USE_WASAPI
+#if USE_WASAPI
 static qboolean wasapi_init;
 
 #include <mmreg.h>
@@ -124,11 +127,11 @@ static void initFormat( WAVEFORMATEXTENSIBLE *wave, int nChannels, int nSamples,
 // Sound mixer thread
 static DWORD WINAPI ThreadProc( HANDLE hInited )
 {
-	HANDLE( WINAPI *pAvSetMmThreadCharacteristicsW )( _In_ LPCWSTR TaskName, _Inout_ LPDWORD TaskIndex ) = NULL;
-	BOOL( WINAPI *pAvRevertMmThreadCharacteristics )( _In_ HANDLE AvrtHandle ) = NULL;
+	HANDLE( WINAPI *pAvSetMmThreadCharacteristicsW )( _In_ LPCWSTR TaskName, _Inout_ LPDWORD TaskIndex );
+	BOOL( WINAPI *pAvRevertMmThreadCharacteristics )( _In_ HANDLE AvrtHandle );
 	BYTE	*pData;
-	DWORD	taskIndex = 0;
-	HANDLE	th = NULL;
+	DWORD	taskIndex;
+	HANDLE	th;
 	DWORD	dwOffset;
 	DWORD	dwRes;
 	UINT32	samples, n;
@@ -139,11 +142,15 @@ static DWORD WINAPI ThreadProc( HANDLE hInited )
 	// execution starts in main thread context
 
 	// Ask MMCSS to temporarily boost our thread priority to reduce glitches while the low-latency stream plays
+	th = NULL;
+	taskIndex = 0;
+	pAvSetMmThreadCharacteristicsW = NULL;
+	pAvRevertMmThreadCharacteristics = NULL;
 	hAVRT = LoadLibraryW( L"avrt" );
 	if ( hAVRT )
 	{
-		pAvSetMmThreadCharacteristicsW = (void*) GetProcAddress( hAVRT, "AvSetMmThreadCharacteristicsW" );
-		pAvRevertMmThreadCharacteristics = (void*) GetProcAddress( hAVRT, "AvRevertMmThreadCharacteristics" );
+		pAvSetMmThreadCharacteristicsW = (void*)GetProcAddress( hAVRT, "AvSetMmThreadCharacteristicsW" );
+		pAvRevertMmThreadCharacteristics = (void*)GetProcAddress( hAVRT, "AvRevertMmThreadCharacteristics" );
 		if ( pAvRevertMmThreadCharacteristics && pAvSetMmThreadCharacteristicsW )
 		{
 			th = pAvSetMmThreadCharacteristicsW( L"Pro Audio", &taskIndex );
@@ -167,7 +174,7 @@ static DWORD WINAPI ThreadProc( HANDLE hInited )
 			Com_Printf( S_COLOR_YELLOW "WASAPI: GetStreamLatency() failed\n" );
 			goto err_exit;
 		}
-		Com_Printf( S_COLOR_CYAN "WASAPI stream latency: %ims\n", (int)(streamLatency / 10000) );
+		Com_Printf( S_COLOR_CYAN "WASAPI stream latency: %ims\n", (int)( streamLatency / 10000 ) );
 	}
 
 	inPlay = 1;
@@ -190,7 +197,7 @@ static DWORD WINAPI ThreadProc( HANDLE hInited )
 	if ( iAudioClient->lpVtbl->Start( iAudioClient ) != S_OK )
 	{
 		Com_Printf( S_COLOR_YELLOW "WASAPI playback start failed\n" );
-		goto err_prio;
+		goto err_exit;
 	}
 
 	// return control to the main thread
@@ -243,14 +250,15 @@ static DWORD WINAPI ThreadProc( HANDLE hInited )
 
 	iAudioClient->lpVtbl->Stop( iAudioClient );
 
-err_prio:
-	if ( pAvRevertMmThreadCharacteristics && th != NULL )
-		pAvRevertMmThreadCharacteristics( hThread );
-
-	if ( hAVRT )
-		FreeLibrary( hAVRT );
-
 err_exit:
+	if ( hAVRT )
+	{
+		if ( pAvRevertMmThreadCharacteristics && th != NULL )
+			pAvRevertMmThreadCharacteristics( th );
+
+		FreeLibrary( hAVRT );
+	}
+
 	inPlay = 0;
 	bufferPosition = 0;
 
@@ -382,14 +390,23 @@ static qboolean SNDDMA_InitWASAPI( void )
 
 	InitializeCriticalSection( &cs );
 
-	if ( CoCreateInstance( &CLSID_MMDeviceEnumerator, 0, CLSCTX_ALL, &IID_IMMDeviceEnumerator, (void **) &pEnumerator ) != S_OK ) {
+	hr = CoCreateInstance( &CLSID_MMDeviceEnumerator, 0, CLSCTX_ALL, &IID_IMMDeviceEnumerator, (void **) &pEnumerator );
+	if ( hr != S_OK )
+	{
 		Com_Printf( S_COLOR_YELLOW "WASAPI: CoCreateInstance() failed\n" );
 		goto error1;
 	}
 
-	pEnumerator->lpVtbl->RegisterEndpointNotificationCallback( pEnumerator, (IMMNotificationClient*) &notification_client );
+	hr = pEnumerator->lpVtbl->RegisterEndpointNotificationCallback( pEnumerator, (IMMNotificationClient*) &notification_client );
+	if ( hr != S_OK )
+	{
+		Com_Printf( S_COLOR_YELLOW "WASAPI: RegisterEndpointNotificationCallback() failed\n" );
+		goto error2;
+	}
 
-	if ( pEnumerator->lpVtbl->GetDefaultAudioEndpoint( pEnumerator, eRender, eMultimedia, &iMMDevice ) != S_OK ) {
+	hr = pEnumerator->lpVtbl->GetDefaultAudioEndpoint( pEnumerator, eRender, eMultimedia, &iMMDevice );
+	if ( hr != S_OK )
+	{
 		Com_Printf( S_COLOR_YELLOW "WASAPI: GetDefaultAudioEndpoint() failed\n" );
 		goto error2;
 	}
@@ -402,7 +419,8 @@ static qboolean SNDDMA_InitWASAPI( void )
 
 	iMMDevice->lpVtbl->GetId( iMMDevice, &DeviceID );
 
-	if ( iMMDevice->lpVtbl->Activate( iMMDevice, &IID_IAudioClient, CLSCTX_ALL, 0, (void **) &iAudioClient ) != S_OK )
+	hr = iMMDevice->lpVtbl->Activate( iMMDevice, &IID_IAudioClient, CLSCTX_ALL, 0, (void **)&iAudioClient );
+	if ( hr != S_OK )
 	{
 		Com_Printf( S_COLOR_YELLOW "WASAPI: audio client activation failed\n" );
 		goto error3;
@@ -574,7 +592,7 @@ static qboolean SNDDMA_InitWASAPI( void )
 	hThread = CreateThread( NULL, 4096, (LPTHREAD_START_ROUTINE)ThreadProc, hInited, 0, &dwThreadID );
 	if ( hThread == NULL )
 	{
-		Com_Printf( S_COLOR_YELLOW "WASAPI: CreateThread() failed\n" );
+		Com_Printf( S_COLOR_YELLOW "WASAPI: CreateThread( hThread ) failed\n" );
 		goto error7;
 	}
 
@@ -608,13 +626,19 @@ error2:
 		CoTaskMemFree( DeviceID );
 	DeviceID = NULL;
 
-	pEnumerator->lpVtbl->UnregisterEndpointNotificationCallback( pEnumerator, (IMMNotificationClient *) &notification_client );
+	if ( notification_client.lpVtbl->QueryInterface ) {
+		pEnumerator->lpVtbl->UnregisterEndpointNotificationCallback( pEnumerator, (IMMNotificationClient *)&notification_client );
+		Com_Memset( &notification_client, 0, sizeof( notification_client ) );
+	}
+
 	pEnumerator->lpVtbl->Release( pEnumerator ); pEnumerator = NULL;
 
 error1:
 	DeleteCriticalSection( &cs );
 
 	Com_Memset( &dma, 0, sizeof( dma ) );
+
+	dma.channels = 1; // to avoid division-by-zero in S_GetSoundtime()
 
 	return qfalse;
 }
@@ -691,7 +715,7 @@ SNDDMA_Shutdown
 */
 void SNDDMA_Shutdown( void ) {
 	Com_DPrintf( "Shutting down sound system\n" );
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	if ( wasapi_init ) {
 		Done_WASAPI();
 	}
@@ -732,7 +756,7 @@ void SNDDMA_Shutdown( void ) {
 	pDSPBuf = NULL;
 
 	dsound_init = qfalse;
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	wasapi_init = qfalse;
 #endif
 	memset( &dma, 0, sizeof( dma ) );
@@ -755,7 +779,7 @@ Returns false if failed
 */
 qboolean SNDDMA_Init( void ) {
 
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	const char *defdrv;
 	cvar_t *s_driver;
 
@@ -783,13 +807,13 @@ qboolean SNDDMA_Init( void ) {
 	memset( &dma, 0, sizeof( dma ) );
 
 	dsound_init = qfalse;
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	wasapi_init = qfalse;
 #endif
 	if ( CoInitialize( NULL ) != S_OK ) {
 		return qfalse;
 	}
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	if ( Q_stricmp( s_driver->string, "wasapi" ) == 0 && SNDDMA_InitWASAPI() ) {
 		dma.driver = "WASAPI";
 		wasapi_init = qtrue;
@@ -800,6 +824,8 @@ qboolean SNDDMA_Init( void ) {
 		dma.driver = "DirectSound";
 		dsound_init = qtrue;
 		return qtrue;
+	} else {
+		dma.channels = 1; // to avoid division-by-zero in S_GetSoundTime()
 	}
 
 	Com_DPrintf( "Failed\n" );
@@ -824,7 +850,7 @@ DEFINE_GUID(IID_IDirectSound8, 0xC50A7E93, 0xF395, 0x4834, 0x9E, 0xF6, 0x7F, 0xA
 DEFINE_GUID(IID_IDirectSound, 0x279AFA83, 0x4981, 0x11CE, 0xA5, 0x21, 0x00, 0x20, 0xAF, 0x0B, 0xE5, 0x60);
 
 
-qboolean SNDDMA_InitDS( void )
+static qboolean SNDDMA_InitDS( void )
 {
 	HRESULT			hresult;
 	DSBUFFERDESC	dsbuf;
@@ -835,12 +861,12 @@ qboolean SNDDMA_InitDS( void )
 	Com_Printf( "Initializing DirectSound\n" );
 
 	use8 = 1;
-    // Create IDirectSound using the primary sound device
-    if( FAILED( hresult = CoCreateInstance(&CLSID_DirectSound8, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectSound8, (void **)&pDS))) {
+	// Create IDirectSound using the primary sound device
+	if( FAILED( hresult = CoCreateInstance(&CLSID_DirectSound8, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectSound8, (void **)&pDS))) {
 		use8 = 0;
-	    if( FAILED( hresult = CoCreateInstance(&CLSID_DirectSound, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectSound, (void **)&pDS))) {
+		if( FAILED( hresult = CoCreateInstance(&CLSID_DirectSound, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectSound, (void **)&pDS))) {
 			Com_Printf ("failed\n");
-			SNDDMA_Shutdown ();
+			SNDDMA_Shutdown();
 			return qfalse;
 		}
 	}
@@ -853,11 +879,10 @@ qboolean SNDDMA_InitDS( void )
 
 	if ( DS_OK != pDS->lpVtbl->SetCooperativeLevel( pDS, g_wv.hWnd, DSSCL_PRIORITY ) )	{
 		Com_Printf ("failed\n");
-		SNDDMA_Shutdown ();
+		SNDDMA_Shutdown();
 		return qfalse;
 	}
 	Com_DPrintf("ok\n" );
-
 
 	// create the secondary buffer we'll actually work with
 	dma.channels = 2;
@@ -883,14 +908,14 @@ qboolean SNDDMA_InitDS( void )
 
 	memset (&format, 0, sizeof(format));
 	format.wFormatTag = WAVE_FORMAT_PCM;
-    format.nChannels = dma.channels;
-    format.wBitsPerSample = dma.samplebits;
-    format.nSamplesPerSec = dma.speed;
-    format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
-    format.cbSize = 0;
-    format.nAvgBytesPerSec = format.nSamplesPerSec*format.nBlockAlign; 
+	format.nChannels = dma.channels;
+	format.wBitsPerSample = dma.samplebits;
+	format.nSamplesPerSec = dma.speed;
+	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
+	format.cbSize = 0;
+	format.nAvgBytesPerSec = format.nSamplesPerSec*format.nBlockAlign;
 
-	memset (&dsbuf, 0, sizeof(dsbuf));
+	memset( &dsbuf, 0, sizeof( dsbuf ) );
 	dsbuf.dwSize = sizeof(DSBUFFERDESC);
 
 	// Micah: take advantage of 2D hardware.if available.
@@ -970,7 +995,7 @@ how many sample are required to fill it up.
 ===============
 */
 int SNDDMA_GetDMAPos( void ) {
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	if ( wasapi_init ) {
 		// restart sound system if needed
 		if ( doSndRestart ) {
@@ -1008,7 +1033,7 @@ void SNDDMA_BeginPainting( void ) {
 	DWORD	*pbuf, *pbuf2;
 	HRESULT	hresult;
 	DWORD	dwStatus;
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	if ( wasapi_init ) {
 		EnterCriticalSection( &cs );
 		return;
@@ -1063,7 +1088,7 @@ Also unlocks the dsound buffer
 ===============
 */
 void SNDDMA_Submit( void ) {
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	if ( wasapi_init ) {
 		LeaveCriticalSection( &cs );
 		return;
@@ -1084,7 +1109,7 @@ When we change windows we need to do this
 =================
 */
 void SNDDMA_Activate( void ) {
-#ifdef USE_WASAPI
+#if USE_WASAPI
 	if ( wasapi_init ) {
 		if ( inPlay == 0 ) {
 			doSndRestart = qtrue;

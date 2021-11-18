@@ -2565,7 +2565,7 @@ static void FS_FreeUnusedCache( void )
 
 #ifdef USE_PK3_CACHE_FILE
 
-void FS_WriteCacheHeader( FILE *f )
+static void FS_WriteCacheHeader( FILE *f )
 {
 	fwrite( cache_header, sizeof( cache_header ), 1, f );
 }
@@ -3370,7 +3370,7 @@ Returns a uniqued list of files that match the given criteria
 from all search paths
 ===============
 */
-char **FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags ) {
+static char **FS_ListFilteredFiles( const char *path, const char *extension, const char *filter, int *numfiles, int flags ) {
 	int				nfiles;
 	char			**listCopy;
 	char			*list[MAX_FOUND_FILES];
@@ -4853,6 +4853,22 @@ static void FS_Startup( void ) {
 }
 
 
+static void FS_PrintSearchPaths( void )
+{
+	searchpath_t *path = fs_searchpaths;
+
+	Com_Printf( "\nSearch paths:\n" );
+
+	while ( path )
+	{
+		if ( path->dir && path->policy == DIR_STATIC )
+			Com_Printf( " * %s\n", path->dir->path );
+
+		path = path->next;
+	}
+}
+
+
 /*
 ===================
 FS_CheckIdPaks
@@ -5380,7 +5396,6 @@ void FS_InitFilesystem( void ) {
 	Com_StartupVariable( "fs_basepath" );
 	Com_StartupVariable( "fs_homepath" );
 	Com_StartupVariable( "fs_game" );
-
 	Com_StartupVariable( "fs_basegame" );
 	Com_StartupVariable( "fs_copyfiles" );
 	Com_StartupVariable( "fs_restrict" );

@@ -139,7 +139,7 @@ void SV_SetConfigstring (int index, const char *val) {
 			if ( index == CS_SERVERINFO && ( SV_GentityNum( i )->r.svFlags & SVF_NOSERVERINFO ) ) {
 				continue;
 			}
-		
+
 			SV_SendConfigstring(client, index);
 		}
 	}
@@ -216,7 +216,7 @@ baseline will be transmitted
 */
 static void SV_CreateBaseline( void ) {
 	sharedEntity_t *ent;
-	int				entnum;	
+	int				entnum;
 
 	for ( entnum = 0; entnum < sv.num_entities ; entnum++ ) {
 		ent = SV_GentityNum( entnum );
@@ -269,7 +269,7 @@ static void SV_BoundMaxClients( int minimum ) {
 SV_SetSnapshotParams
 ===============
 */
-static void SV_SetSnapshotParams( void ) 
+static void SV_SetSnapshotParams( void )
 {
 #ifdef USE_MV
     svs.numSnapshotPSF = sv_mvClients->integer * PACKET_BACKUP * MAX_CLIENTS;
@@ -320,7 +320,7 @@ static void SV_Startup( void ) {
 	}
 
 	Cvar_Set( "sv_running", "1" );
-	
+
 	// Join the ipv6 multicast group now that a map is running so clients can scan for us on the local network.
 #ifdef USE_IPV6
 	NET_JoinMulticast6();
@@ -414,7 +414,7 @@ void SV_ChangeMaxClients( void ) {
 
 	// free the old clients on the hunk
 	Hunk_FreeTempMemory( oldClients );
-	
+
 	SV_SetSnapshotParams();
 }
 
@@ -434,7 +434,7 @@ static void SV_ClearServer( void ) {
 	}
 
 	if ( !sv_levelTimeReset->integer ) {
-		i = sv.time; 
+		i = sv.time;
 		Com_Memset( &sv, 0, sizeof( sv ) );
 		sv.time = i;
 	} else {
@@ -491,7 +491,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// Restart renderer?
 	// CL_StartHunkUsers( );
 
-	// init client structures and svs.numSnapshotEntities 
+	// init client structures and svs.numSnapshotEntities
 	if ( !Cvar_VariableIntegerValue( "sv_running" ) ) {
 		SV_Startup();
 	} else {
@@ -535,7 +535,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// server has changed
 	svs.snapFlagServerBit ^= SNAPFLAG_SERVERCOUNT;
 
-	// set nextmap to the same map, but it may be overriden
+	// set nextmap to the same map, but it may be overridden
 	// by the game startup or another console command
 	Cvar_Set( "nextmap", "map_restart 0" );
 //	Cvar_Set( "nextmap", va("map %s", server) );
@@ -543,8 +543,9 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 	// try to reset level time if server is empty
 	if ( !sv_levelTimeReset->integer && !sv.restartTime ) {
 		for ( i = 0; i < sv_maxclients->integer; i++ ) {
-			if ( svs.clients[ i ].state != CS_FREE )
+			if ( svs.clients[i].state >= CS_CONNECTED ) {
 				break;
+			}
 		}
 		if ( i == sv_maxclients->integer ) {
 			sv.time = 0;
@@ -595,7 +596,7 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 
 	// clear physics interaction links
 	SV_ClearWorld();
-	
+
 	// media configstring setting should be done during
 	// the loading stage, so connected clients don't have
 	// to load during actual gameplay
@@ -667,14 +668,14 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 					ent->s.number = i;
 					client->gentity = ent;
 
-					client->deltaMessage = -1;
+					client->deltaMessage = client->netchan.outgoingSequence - ( PACKET_BACKUP + 1 ); // force delta reset
 					client->lastSnapshotTime = svs.time - 9999; // generate a snapshot immediately
 
 					VM_Call( gvm, 1, GAME_CLIENT_BEGIN, i );
 				}
 			}
 		}
-	}	
+	}
 
 	// run another frame to allow things to look at all the players
 	sv.time += 100;
@@ -898,38 +899,36 @@ void SV_Init( void )
     sv_master[0] = Cvar_Get ("sv_master1", MASTER_SERVER_NAME, 0 );
     sv_master[1] = Cvar_Get ("sv_master2", MASTER2_SERVER_NAME, CVAR_ARCHIVE );
     sv_master[2] = Cvar_Get ("sv_master3", MASTER3_SERVER_NAME, CVAR_ARCHIVE );
-    sv_master[3] = Cvar_Get ("sv_master4", "", CVAR_ARCHIVE );
-    sv_master[4] = Cvar_Get ("sv_master5", "", CVAR_ARCHIVE );
 
-	for ( index = 3; index < MAX_MASTER_SERVERS; index++ )
-		sv_master[index] = Cvar_Get(va("sv_master%d", index + 1), "", CVAR_ARCHIVE);
+	for ( index = 0; index < MAX_MASTER_SERVERS; index++ )
+		sv_master[ index ] = Cvar_Get( va( "sv_master%d", index + 1 ), "", CVAR_ARCHIVE_ND );
 
     sv_reconnectlimit = Cvar_Get( "sv_reconnectlimit", "3", 0 );
 	Cvar_CheckRange( sv_reconnectlimit, "0", "12", CV_INTEGER );
     Cvar_SetDescription(sv_reconnectlimit, "Number of times a disconnected client can come back and reconnect\nDefault: 12");
 
-    sv_padPackets = Cvar_Get ("sv_padPackets", "0", 0);
+    sv_padPackets = Cvar_Get ( "sv_padPackets", "0", CVAR_DEVELOPER );
     Cvar_SetDescription( sv_padPackets, "Toggles the padding of network packets\nDefault: 0" );
 
     sv_killserver = Cvar_Get ("sv_killserver", "0", 0);
-    Cvar_SetDescription(sv_killserver, "Set to a one the server goes down\nDefault: 0");
+    Cvar_SetDescription( sv_killserver, "Set to a one the server goes down\nDefault: 0" );
 
-    sv_mapChecksum = Cvar_Get ("sv_mapChecksum", "", CVAR_ROM);
-    Cvar_SetDescription(sv_mapChecksum, "Allows clients to compare the map checksum\nDefault: empty");
+    sv_mapChecksum = Cvar_Get ( "sv_mapChecksum", "", CVAR_ROM );
+    Cvar_SetDescription( sv_mapChecksum, "Allows clients to compare the map checksum\nDefault: empty" );
 
-    sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
+    sv_lanForceRate = Cvar_Get ( "sv_lanForceRate", "1", CVAR_ARCHIVE_ND );
     Cvar_SetDescription( sv_lanForceRate, "Force clients to use the same packet rate as the server\nDefault: 1" );
 
-    sv_strictAuth = Cvar_Get ("sv_strictAuth", "1", CVAR_ARCHIVE );
+    sv_strictAuth = Cvar_Get ( "sv_strictAuth", "1", CVAR_ARCHIVE );
 
 #ifdef USE_SERVER_DEMO
-    sv_demonotice = Cvar_Get ("sv_demonotice", "", CVAR_ARCHIVE);
-	sv_demofolder = Cvar_Get ("sv_demofolder", "serverdemos", CVAR_ARCHIVE );
+    sv_demonotice = Cvar_Get ( "sv_demonotice", "", CVAR_ARCHIVE );
+	sv_demofolder = Cvar_Get ( "sv_demofolder", "serverdemos", CVAR_ARCHIVE );
 #endif
 
 #ifdef USE_AUTH
-    sv_authServerIP = Cvar_Get("sv_authServerIP", "", CVAR_TEMP | CVAR_ROM);
-	sv_auth_engine = Cvar_Get("sv_auth_engine", "1", CVAR_ROM);
+    sv_authServerIP = Cvar_Get( "sv_authServerIP", "", CVAR_TEMP | CVAR_ROM );
+	sv_auth_engine = Cvar_Get( "sv_auth_engine", "1", CVAR_ROM );
 #endif
 
 #ifdef USE_BANS
@@ -949,7 +948,7 @@ void SV_Init( void )
 	// init the botlib here because we need the pre-compiler in the UI
 	SV_BotInitBotLib();
 
-#ifdef USE_BANS	
+#ifdef USE_BANS
 	// Load saved bans
 	Cbuf_AddText("rehashbans\n");
 #endif
@@ -980,7 +979,7 @@ to totally exit after returning from this function.
 void SV_FinalMessage( const char *message ) {
 	int			i, j;
 	client_t	*cl;
-	
+
 	// send it twice, ignoring rate
 	for ( j = 0 ; j < 2 ; j++ ) {
 		for (i=0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
@@ -1059,7 +1058,7 @@ void SV_Shutdown( const char *finalmsg ) {
 
 		for ( index = 0; index < sv_maxclients->integer; index++ )
 			SV_FreeClient( &svs.clients[ index ] );
-		
+
 		Z_Free( svs.clients );
 	}
 	Com_Memset( &svs, 0, sizeof( svs ) );

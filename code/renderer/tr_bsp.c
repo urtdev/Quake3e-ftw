@@ -36,8 +36,7 @@ void RE_LoadWorldMap( const char *name );
 static	world_t		s_worldData;
 static	byte		*fileBase;
 
-int			c_subdivisions;
-int			c_gridVerts;
+static int	c_gridVerts;
 
 //===============================================================================
 
@@ -104,19 +103,22 @@ void R_ColorShiftLightingBytes( const byte in[4], byte out[4] ) {
 	shift = r_mapOverBrightBits->integer - tr.overbrightBits;
 
 	// shift the data based on overbright range
-	r = in[0] << shift;
-	g = in[1] << shift;
-	b = in[2] << shift;
-	
-	// normalize by color instead of saturating to white
-	if ( ( r | g | b ) > 255 ) {
-		int		max;
-
-		max = r > g ? r : g;
-		max = max > b ? max : b;
-		r = r * 255 / max;
-		g = g * 255 / max;
-		b = b * 255 / max;
+	if ( shift >= 0 ) {
+		r = in[0] << shift;
+		g = in[1] << shift;
+		b = in[2] << shift;
+		// normalize by color instead of saturating to white
+		if ( ( r | g | b ) > 255 ) {
+			int max = r > g ? r : g;
+			max = max > b ? max : b;
+			r = r * 255 / max;
+			g = g * 255 / max;
+			b = b * 255 / max;
+		}
+	} else {
+		r = in[0] >> -shift;
+		g = in[1] >> -shift;
+		b = in[2] >> -shift;
 	}
 
 	if ( r_mapGreyScale->integer ) {
@@ -622,7 +624,7 @@ static void ParseFace( const dsurface_t *ds, const drawVert_t *verts, msurface_t
 			cv->points[i][3+j] = LittleFloat( verts[i].st[j] );
 			cv->points[i][5+j] = LittleFloat( verts[i].lightmap[j] );
 		}
-		R_ColorShiftLightingBytes( verts[i].color, (byte *)&cv->points[i][7] );
+		R_ColorShiftLightingBytes( verts[i].color.rgba, (byte *)&cv->points[i][7] );
 		if ( lightmapNum >= 0 && r_mergeLightmaps->integer ) {
 			// adjust lightmap coords
 			cv->points[i][5] = cv->points[i][5] * tr.lightmapScale[0] + lightmapX;
@@ -721,7 +723,7 @@ static void ParseMesh( const dsurface_t *ds, const drawVert_t *verts, msurface_t
 			points[i].st[j] = LittleFloat( verts[i].st[j] );
 			points[i].lightmap[j] = LittleFloat( verts[i].lightmap[j] );
 		}
-		R_ColorShiftLightingBytes( verts[i].color, points[i].color );
+		R_ColorShiftLightingBytes( verts[i].color.rgba, points[i].color.rgba );
 		if ( lightmapNum >= 0 && r_mergeLightmaps->integer ) {
 			// adjust lightmap coords
 			points[i].lightmap[0] = points[i].lightmap[0] * tr.lightmapScale[0] + lightmapX;
@@ -805,7 +807,7 @@ static void ParseTriSurf( const dsurface_t *ds, const drawVert_t *verts, msurfac
 			tri->verts[i].lightmap[j] = LittleFloat( verts[i].lightmap[j] );
 		}
 
-		R_ColorShiftLightingBytes( verts[i].color, tri->verts[i].color );
+		R_ColorShiftLightingBytes( verts[i].color.rgba, tri->verts[i].color.rgba );
 		if ( lightmapNum >= 0 && r_mergeLightmaps->integer ) {
 			// adjust lightmap coords
 			tri->verts[i].lightmap[0] = tri->verts[i].lightmap[0] * tr.lightmapScale[0] + lightmapX;
@@ -1983,11 +1985,13 @@ static void R_LoadFogs( const lump_t *l, const lump_t *brushesLump, const lump_t
 
 		out->parms = shader->fogParms;
 
-		out->colorInt = ColorBytes4( fogColor[0] * tr.identityLight,
-			fogColor[1] * tr.identityLight, fogColor[2] * tr.identityLight, 1.0 );
+		out->colorInt.rgba[0] = ( fogColor[0] * tr.identityLight ) * 255.0f;
+		out->colorInt.rgba[1] = ( fogColor[1] * tr.identityLight ) * 255.0f;
+		out->colorInt.rgba[2] = ( fogColor[2] * tr.identityLight ) * 255.0f;
+		out->colorInt.rgba[3] = 255;
 
 		for ( n = 0; n < 4; n++ )
-			out->color[ n ] = ( ( out->colorInt >> (n*8) ) & 255 ) / 255.0f;
+			out->color[ n ] = (float) out->colorInt.rgba[ n ] / 255.0f;
 
 		d = shader->fogParms.depthForOpaque < 1 ? 1 : shader->fogParms.depthForOpaque;
 		out->tcScale = 1.0f / ( d * 8 );
@@ -2176,6 +2180,7 @@ Called directly from cgame
 */
 void RE_LoadWorldMap( const char *name ) {
 	int			i;
+	int32_t		size;
 	dheader_t	*header;
 	union {
 		byte *b;
@@ -2198,9 +2203,12 @@ void RE_LoadWorldMap( const char *name ) {
 	tr.worldMapLoaded = qtrue;
 
 	// load it
-	ri.FS_ReadFile( name, &buffer.v );
+	size = ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
-		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
+		ri.Error( ERR_DROP, "%s: couldn't load %s", __func__, name );
+	}
+	if ( size < sizeof( dheader_t ) ) {
+		ri.Error( ERR_DROP, "%s: %s has truncated header", __func__, name );
 	}
 
 	tr.mapLoading = qtrue;
@@ -2221,15 +2229,21 @@ void RE_LoadWorldMap( const char *name ) {
 	header = (dheader_t *)buffer.b;
 	fileBase = (byte *)header;
 
-	i = LittleLong (header->version);
-	if ( i != BSP_VERSION ) {
-		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s has wrong version number (%i should be %i)", 
-			name, i, BSP_VERSION);
+	// swap all the lumps
+	for ( i = 0; i < sizeof( dheader_t ) / 4; i++ ) {
+		( (int32_t *)header )[i] = LittleLong( ( (int32_t *)header )[i] );
 	}
 
-	// swap all the lumps
-	for (i=0 ; i<sizeof(dheader_t)/4 ; i++) {
-		((int *)header)[i] = LittleLong ( ((int *)header)[i]);
+	if ( header->version != BSP_VERSION ) {
+		ri.Error( ERR_DROP, "%s: %s has wrong version number (%i should be %i)", __func__, name, header->version, BSP_VERSION );
+	}
+
+	for ( i = 0; i < HEADER_LUMPS; i++ ) {
+		int32_t ofs = header->lumps[i].fileofs;
+		int32_t len = header->lumps[i].filelen;
+		if ( (uint32_t)ofs > MAX_QINT || (uint32_t)len > MAX_QINT || ofs + len > size || ofs + len < 0 ) {
+			ri.Error( ERR_DROP, "%s: %s has wrong lump[%i] size/offset", __func__, name, i );
+		}
 	}
 
 	// load into heap

@@ -25,6 +25,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 static byte			 s_intensitytable[256];
 static unsigned char s_gammatable[256];
 
+#ifdef USE_VULKAN
+static unsigned char s_gammatable_linear[256];
+#endif
+
 GLint	gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
 GLint	gl_filter_max = GL_LINEAR;
 
@@ -45,8 +49,8 @@ return a hash value for the filename
 void R_GammaCorrect( byte *buffer, int bufSize ) {
 	int i;
 #ifdef USE_VULKAN
-	//if ( r_fbo->integer == 1 )
-	//	return;
+	if ( vk.capture.image != VK_NULL_HANDLE )
+		return;
 #endif
 	for ( i = 0; i < bufSize; i++ ) {
 		buffer[i] = s_gammatable[buffer[i]];
@@ -327,7 +331,11 @@ static void R_LightScaleTexture( byte *in, int inwidth, int inheight, qboolean o
 
 	if ( only_gamma )
 	{
+#ifdef USE_VULKAN
+		if ( !glConfig.deviceSupportsGamma && !vk.fboActive )
+#else
 		if ( !glConfig.deviceSupportsGamma )
+#endif
 		{
 			int		i, c;
 			byte	*p;
@@ -352,7 +360,11 @@ static void R_LightScaleTexture( byte *in, int inwidth, int inheight, qboolean o
 
 		c = inwidth*inheight;
 
+#ifdef USE_VULKAN
+		if ( glConfig.deviceSupportsGamma || vk.fboActive )
+#else
 		if ( glConfig.deviceSupportsGamma )
+#endif
 		{
 			for (i=0 ; i<c ; i++, p+=4)
 			{
@@ -1093,7 +1105,8 @@ image_t *R_CreateImage( const char *name, const char *name2, byte *pic, int widt
 
 	if ( namelen > 6 && Q_stristr( image->imgName, "maps/" ) == image->imgName && Q_stristr( image->imgName + 6, "/lm_" ) != NULL ) {
 		// external lightmap atlases stored in maps/<mapname>/lm_XXXX textures
-		image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE | IMGFLAG_COLORSHIFT;
+		// image->flags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE | IMGFLAG_COLORSHIFT;
+		image->flags |= IMGFLAG_NO_COMPRESSION | IMGFLAG_NOSCALE;
 	}
 
 #ifdef USE_VULKAN
@@ -1291,11 +1304,12 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 {
 	image_t	*image;
 	const char *localName;
+	char	strippedName[ MAX_QPATH ];
 	int		width, height;
 	byte	*pic;
 	int		hash;
 
-	if (!name) {
+	if ( !name ) {
 		return NULL;
 	}
 
@@ -1304,7 +1318,7 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 	//
 	// see if the image is already loaded
 	//
-	for ( image = hashTable[hash]; image; image = image->next ) {
+	for ( image = hashTable[ hash ]; image; image = image->next ) {
 		if ( !Q_stricmp( name, image->imgName ) ) {
 			// the white image can be used with any set of parms, but other mismatches are errors
 			if ( strcmp( name, "*white" ) ) {
@@ -1313,6 +1327,21 @@ image_t	*R_FindImageFile( const char *name, imgFlags_t flags )
 				}
 			}
 			return image;
+		}
+	}
+
+	if ( strrchr( name, '.' ) > name ) {
+		// try with stripped extension
+		COM_StripExtension( name, strippedName, sizeof( strippedName ) );
+		for ( image = hashTable[ hash ]; image; image = image->next ) {
+			if ( !Q_stricmp( strippedName, image->imgName ) ) {
+				//if ( strcmp( strippedName, "*white" ) ) {
+					if ( image->flags != flags ) {
+						ri.Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", strippedName, image->flags, flags );
+					}
+				//}
+				return image;
+			}
 		}
 	}
 
@@ -1432,7 +1461,7 @@ float R_FogFactor( float s, float t ) {
 		s = 1.0;
 	}
 
-	d = tr.fogTable[ (int)(s * (FOG_TABLE_SIZE-1)) ];
+	d = tr.fogTable[ (uint32_t)(s * (FOG_TABLE_SIZE-1)) ];
 
 	return d;
 }
@@ -1601,7 +1630,7 @@ static void R_CreateDefaultImage( void ) {
 R_CreateBuiltinImages
 ==================
 */
-void R_CreateBuiltinImages( void ) {
+static void R_CreateBuiltinImages( void ) {
 	int		x,y;
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
@@ -1652,7 +1681,11 @@ void R_SetColorMappings( void ) {
 	// setup the overbright lighting
 	// negative value will force gamma in windowed mode
 	tr.overbrightBits = abs( r_overBrightBits->integer );
+#ifdef USE_VULKAN
+	if ( !glConfig.deviceSupportsGamma && !vk.fboActive )
+#else
 	if ( !glConfig.deviceSupportsGamma )
+#endif
 		tr.overbrightBits = 0;		// need hardware gamma for overbright
 
 	// never overbright in windowed mode
@@ -1709,16 +1742,18 @@ void R_SetColorMappings( void ) {
 	}
 
 #ifdef USE_VULKAN
-	if ( vk.fboActive ) {
-		// update gamma shader
-		vk_create_post_process_pipeline( 0 );
-	}
+	vk_update_post_process_pipelines();
 	
-	if ( glConfig.deviceSupportsGamma && !vk.fboActive )
+	if ( glConfig.deviceSupportsGamma ) {
+		if ( vk.fboActive )
+			ri.GLimp_SetGamma( s_gammatable_linear, s_gammatable_linear, s_gammatable_linear );
+		else
+			ri.GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
+	}
 #else
 	if ( glConfig.deviceSupportsGamma )
-#endif
 		ri.GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
+#endif
 }
 
 
@@ -1728,6 +1763,14 @@ R_InitImages
 ===============
 */
 void R_InitImages( void ) {
+
+#ifdef USE_VULKAN
+	// initialize linear gamma table before setting color mappings for the first time
+	int i;
+
+	for ( i = 0; i < 256; i++ )
+		s_gammatable_linear[i] = (unsigned char)i;
+#endif
 
 	Com_Memset( hashTable, 0, sizeof( hashTable ) );
 

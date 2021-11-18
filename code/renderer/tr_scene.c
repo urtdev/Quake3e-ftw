@@ -270,6 +270,15 @@ void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, floa
 		intensity *= r_dlightScale->value;
 	}
 #endif
+
+	if ( r_dlightSaturation->value != 1.0 )
+	{
+		float luminance = LUMA( r, g, b );
+		r = LERP( luminance, r, r_dlightSaturation->value );
+		g = LERP( luminance, g, r_dlightSaturation->value );
+		b = LERP( luminance, b, r_dlightSaturation->value );
+	}
+
 	dl = &backEndData->dlights[r_numdlights++];
 	VectorCopy( org, dl->origin );
 	dl->radius = intensity;
@@ -312,6 +321,15 @@ void RE_AddLinearLightToScene( const vec3_t start, const vec3_t end, float inten
 		intensity *= r_dlightScale->value;
 	}
 #endif
+
+	if ( r_dlightSaturation->value != 1.0 )
+	{
+		float luminance = LUMA( r, g, b );
+		r = LERP( luminance, r, r_dlightSaturation->value );
+		g = LERP( luminance, g, r_dlightSaturation->value );
+		b = LERP( luminance, b, r_dlightSaturation->value );
+	}
+
 	dl = &backEndData->dlights[ r_numdlights++ ];
 	VectorCopy( start, dl->origin );
 	VectorCopy( end, dl->origin2 );
@@ -402,7 +420,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 		// compare the area bits
 		areaDiff = 0;
-		for (i = 0 ; i < MAX_MAP_AREA_BYTES/4 ; i++) {
+		for ( i = 0; i < MAX_MAP_AREA_BYTES/sizeof(int); i++ ) {
 			areaDiff |= ((int *)tr.refdef.areamask)[i] ^ ((int *)fd->areamask)[i];
 			((int *)tr.refdef.areamask)[i] = ((int *)fd->areamask)[i];
 		}

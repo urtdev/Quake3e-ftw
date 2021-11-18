@@ -3,4 +3,5 @@ output/
 .vs/
 .vscode/
 *.user
-.idea/
+cmake-*
+.idea

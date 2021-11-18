@@ -24,12 +24,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "tr_local.h"
 
 glconfig_t	glConfig;
+
 qboolean	textureFilterAnisotropic;
 int			maxAnisotropy;
 int			gl_version;
 int			gl_clamp_mode;	// GL_CLAMP or GL_CLAMP_TO_EGGE
 
 glstate_t	glState;
+
+glstatic_t	gls;
 
 #ifdef USE_VULKAN
 static void VkInfo_f( void );
@@ -57,6 +60,8 @@ cvar_t	*r_skipBackEnd;
 //cvar_t	*r_anaglyphMode;
 
 cvar_t	*r_greyscale;
+cvar_t	*r_dither;
+cvar_t	*r_presentBits;
 
 cvar_t	*r_ignorehwgamma;
 
@@ -70,6 +75,7 @@ cvar_t	*r_dlightMode;
 cvar_t	*r_dlightScale;
 cvar_t	*r_dlightIntensity;
 #endif
+cvar_t	*r_dlightSaturation;
 #ifdef USE_VULKAN
 cvar_t	*r_device;
 #ifdef USE_VBO
@@ -83,7 +89,8 @@ cvar_t	*r_bloom_intensity;
 cvar_t	*r_renderWidth;
 cvar_t	*r_renderHeight;
 cvar_t	*r_renderScale;
-#endif
+cvar_t	*r_ext_supersample;
+#endif // USE_VULKAN
 
 cvar_t	*r_dlightBacks;
 
@@ -167,9 +174,9 @@ cvar_t	*r_marksOnTriangleMeshes;
 cvar_t	*r_aviMotionJpegQuality;
 cvar_t	*r_screenshotJpegQuality;
 
-cvar_t	*r_maxpolys;
+static cvar_t *r_maxpolys;
+static cvar_t* r_maxpolyverts;
 int		max_polys;
-cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
 #ifdef USE_VULKAN
@@ -339,7 +346,7 @@ static void R_InitExtensions( void )
 	if ( R_HaveExtension( "GL_ARB_texture_compression" ) &&
 		 R_HaveExtension( "GL_EXT_texture_compression_s3tc" ) )
 	{
-		if ( r_ext_compressed_textures->integer ){ 
+		if ( r_ext_compressed_textures->integer ){
 			glConfig.textureCompression = TC_S3TC_ARB;
 			ri.Printf( PRINT_ALL, "...using GL_EXT_texture_compression_s3tc\n" );
 		} else {
@@ -483,7 +490,7 @@ static void InitOpenGL( void )
 	//		- r_ignorehwgamma
 	//		- r_gamma
 	//
-	
+
 	if ( glConfig.vidWidth == 0 )
 	{
 #ifdef USE_VULKAN
@@ -495,7 +502,34 @@ static void InitOpenGL( void )
 		// This function is responsible for initializing a valid Vulkan subsystem.
 		ri.VKimp_Init( &glConfig );
 
+		gls.windowWidth = glConfig.vidWidth;
+		gls.windowHeight = glConfig.vidHeight;
+
+		gls.captureWidth = glConfig.vidWidth;
+		gls.captureHeight = glConfig.vidHeight;
+
 		ri.CL_SetScaling( 1.0, glConfig.vidWidth, glConfig.vidHeight );
+
+		if ( r_fbo->integer )
+		{
+			if ( r_renderScale->integer )
+			{
+				glConfig.vidWidth = r_renderWidth->integer;
+				glConfig.vidHeight = r_renderHeight->integer;
+			}
+
+			gls.captureWidth = glConfig.vidWidth;
+			gls.captureHeight = glConfig.vidHeight;
+
+			ri.CL_SetScaling( 1.0, gls.captureWidth, gls.captureHeight );
+
+			if ( r_ext_supersample->integer )
+			{
+				glConfig.vidWidth *= 2;
+				glConfig.vidHeight *= 2;
+				ri.CL_SetScaling( 2.0, gls.captureWidth, gls.captureHeight );
+			}
+		}
 
 		vk_initialize();
 #else
@@ -519,7 +553,7 @@ static void InitOpenGL( void )
 		glConfig.maxTextureSize = max_texture_size;
 
 		// stubbed or broken drivers may have reported 0...
-		if ( glConfig.maxTextureSize <= 0 ) 
+		if ( glConfig.maxTextureSize <= 0 )
 			glConfig.maxTextureSize = 0;
 		else if ( glConfig.maxTextureSize > MAX_TEXTURE_SIZE )
 			glConfig.maxTextureSize = MAX_TEXTURE_SIZE; // ResampleTexture() relies on that maximum
@@ -534,28 +568,26 @@ static void InitOpenGL( void )
 
 		if ( glConfig.numTextureUnits && max_bind_units > 0 )
 			glConfig.numTextureUnits = max_bind_units;
-
-		ri.CL_SetScaling( 1.0, glConfig.vidWidth, glConfig.vidHeight );
 #endif
 
 		glConfig.deviceSupportsGamma = qfalse;
-
 		ri.GLimp_InitGamma( &glConfig );
-
-#ifdef USE_VULKAN
-		if ( r_fbo->integer )
-			glConfig.deviceSupportsGamma = qtrue;
-#endif
-
 		if ( r_ignorehwgamma->integer )
 			glConfig.deviceSupportsGamma = qfalse;
 
 		// print info
 		GfxInfo();
+
+		gls.initTime = ri.Milliseconds();
 	}
 
 #ifdef USE_VULKAN
-	vk_init_buffers();
+	if ( !vk.active ) {
+		// might happen after REF_KEEP_WINDOW
+		vk_initialize();
+		gls.initTime = ri.Milliseconds();
+	}
+	vk_init_descriptors();
 #endif
 
 	VarInfo();
@@ -614,10 +646,10 @@ void GL_CheckErrors( void ) {
 }
 
 
-/* 
-============================================================================== 
- 
-						SCREEN SHOTS 
+/*
+==============================================================================
+
+						SCREEN SHOTS
 
 NOTE TTimo
 some thoughts about the screenshots system:
@@ -630,11 +662,11 @@ we use statics to store a count and start writing the first screenshot/screensho
 (with FS_FileExists / FS_FOpenFileWrite calls)
 FIXME: the statics don't get a reinit between fs_game changes
 
-============================================================================== 
-*/ 
+==============================================================================
+*/
 
-/* 
-================== 
+/*
+==================
 RB_ReadPixels
 
 Reads an image but takes care of alignment issues for reading RGB images.
@@ -647,8 +679,8 @@ alignment of packAlign to ensure efficient copying.
 Stores the length of padding after a line of pixels to address padlen
 
 Return value must be freed with ri.Hunk_FreeTempMemory()
-================== 
-*/  
+==================
+*/
 static byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, int *padlen, int lineAlign )
 {
 #ifdef USE_VULKAN
@@ -707,7 +739,7 @@ static byte *RB_ReadPixels(int x, int y, int width, int height, size_t *offset, 
 ==================
 RB_TakeScreenshot
 ==================
-*/  
+*/
 void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileName )
 {
 	const int header_size = 18;
@@ -746,10 +778,10 @@ void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileNam
 			*destptr++ = srcptr[2];
 			*destptr++ = srcptr[1];
 			*destptr++ = temp;
-			
+
 			srcptr += 3;
 		}
-		
+
 		// Skip the pad
 		srcptr += padlen;
 	}
@@ -766,10 +798,10 @@ void RB_TakeScreenshot( int x, int y, int width, int height, const char *fileNam
 }
 
 
-/* 
-================== 
+/*
+==================
 RB_TakeScreenshotJPEG
-================== 
+==================
 */
 void RB_TakeScreenshotJPEG( int x, int y, int width, int height, const char *fileName )
 {
@@ -913,11 +945,11 @@ void RB_TakeScreenshotBMP( int x, int y, int width, int height, const char *file
 }
 
 
-/* 
-================== 
+/*
+==================
 R_ScreenshotFilename
-================== 
-*/  
+==================
+*/
 static void R_ScreenshotFilename( char *fileName, const char *fileExt ) {
 	qtime_t t;
 	int count;
@@ -925,12 +957,12 @@ static void R_ScreenshotFilename( char *fileName, const char *fileExt ) {
 	count = 0;
 	ri.Com_RealTime( &t );
 
-	Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot-%04d%02d%02d-%02d%02d%02d.%s", 
+	Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot-%04d%02d%02d-%02d%02d%02d.%s",
 			1900 + t.tm_year, 1 + t.tm_mon,	t.tm_mday,
 			t.tm_hour, t.tm_min, t.tm_sec, fileExt );
 
 	while (	ri.FS_FileExists( fileName ) && ++count < 1000 ) {
-		Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot-%04d%02d%02d-%02d%02d%02d-%d.%s", 
+		Com_sprintf( fileName, MAX_OSPATH, "screenshots/shot-%04d%02d%02d-%02d%02d%02d-%d.%s",
 				1900 + t.tm_year, 1 + t.tm_mon,	t.tm_mday,
 				t.tm_hour, t.tm_min, t.tm_sec, count, fileExt );
 	}
@@ -959,7 +991,7 @@ static void R_LevelShot( void ) {
 
 	Com_sprintf(checkname, sizeof(checkname), "levelshots/%s.tga", tr.world->baseName);
 
-	allsource = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &padlen, 0 );
+	allsource = RB_ReadPixels(0, 0, gls.captureWidth, gls.captureHeight, &offset, &padlen, 0 );
 	source = allsource + offset;
 
 	buffer = ri.Hunk_AllocateTempMemory(128 * 128*3 + 18);
@@ -1005,8 +1037,8 @@ static void R_LevelShot( void ) {
 }
 
 
-/* 
-================== 
+/*
+==================
 R_ScreenShot_f
 
 screenshot
@@ -1015,8 +1047,8 @@ screenshot [levelshot]
 screenshot [filename]
 
 Doesn't print the pacifier message if there is a second arg
-================== 
-*/  
+==================
+*/
 static void R_ScreenShot_f( void ) {
 	char		checkname[MAX_OSPATH];
 	qboolean	silent;
@@ -1158,10 +1190,10 @@ const void *RB_TakeVideoFrameCmd( const void *data )
 				*destptr++ = srcptr[0];
 				srcptr += 3;
 			}
-			
+
 			Com_Memset(destptr, '\0', avipadlen);
 			destptr += avipadlen;
-			
+
 			srcptr += padlen;
 		}
 
@@ -1302,19 +1334,19 @@ static void GfxInfo( void )
 
 	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 #ifdef USE_VULKAN
-	ri.Printf( PRINT_ALL, " presentation: %s\n", vk_get_format_name( vk.surface_format.format ) );
-	if ( vk.color_format != vk.surface_format.format ) {
-		ri.Printf( PRINT_ALL, " color: %s\n", vk_get_format_name( vk.color_format ) );
+	ri.Printf( PRINT_ALL, " presentation: %s\n", vk_format_string( vk.present_format.format ) );
+	if ( vk.color_format != vk.present_format.format ) {
+		ri.Printf( PRINT_ALL, " color: %s\n", vk_format_string( vk.color_format ) );
 	}
-	if ( vk.capture_format != vk.surface_format.format || vk.capture_format != vk.color_format ) {
-		ri.Printf( PRINT_ALL, " capture: %s\n", vk_get_format_name( vk.capture_format ) );
+	if ( vk.capture_format != vk.present_format.format || vk.capture_format != vk.color_format ) {
+		ri.Printf( PRINT_ALL, " capture: %s\n", vk_format_string( vk.capture_format ) );
 	}
-	ri.Printf( PRINT_ALL, " depth: %s\n", vk_get_format_name( vk.depth_format ) );
+	ri.Printf( PRINT_ALL, " depth: %s\n", vk_format_string( vk.depth_format ) );
 #endif
 	if ( glConfig.isFullscreen )
 	{
 		const char *modefs = ri.Cvar_VariableString( "r_modeFullscreen" );
-		if ( *modefs ) 
+		if ( *modefs )
 			mode = atoi( modefs );
 		else
 			mode = ri.Cvar_VariableIntegerValue( "r_mode" );
@@ -1326,8 +1358,15 @@ static void GfxInfo( void )
 		fs = fsstrings[0];
 	}
 
-	ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", mode, glConfig.vidWidth, glConfig.vidHeight, fs );
-	
+	if ( glConfig.vidWidth != gls.windowWidth || glConfig.vidHeight != gls.windowHeight )
+	{
+		ri.Printf( PRINT_ALL, "RENDER: %d x %d, MODE: %d, %d x %d %s hz:", glConfig.vidWidth, glConfig.vidHeight, mode, gls.windowWidth, gls.windowHeight, fs );
+	}
+	else
+	{
+		ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", mode, gls.windowWidth, gls.windowHeight, fs );
+	}
+
 	if ( glConfig.displayFrequency )
 	{
 		ri.Printf( PRINT_ALL, "%d\n", glConfig.displayFrequency );
@@ -1360,7 +1399,6 @@ static void VarInfo( void )
 	} else {
 		ri.Printf( PRINT_ALL, "GAMMA: software w/ %d overbright bits\n", tr.overbrightBits );
 	}
-
 
 	ri.Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
 	ri.Printf( PRINT_ALL, "texture bits: %d\n", r_texturebits->integer ? r_texturebits->integer : 32 );
@@ -1404,8 +1442,8 @@ static void VkInfo_f( void )
 	ri.Printf(PRINT_ALL, "max_vertex_usage: %iKb\n", (int)((vk.stats.vertex_buffer_max + 1023) / 1024) );
 	ri.Printf(PRINT_ALL, "max_push_size: %ib\n", vk.stats.push_size_max );
 
-	ri.Printf(PRINT_ALL, "created pipelines: %i\n", vk.pipeline_create_count );
-	ri.Printf(PRINT_ALL, "allocated pipelines: %i\n", vk.pipelines_count );
+	ri.Printf(PRINT_ALL, "pipeline handles: %i\n", vk.pipeline_create_count );
+	ri.Printf(PRINT_ALL, "pipeline descriptors: %i, base: %i\n", vk.pipelines_count, vk.pipelines_world_base );
 	ri.Printf(PRINT_ALL, "image chunks: %i\n", vk_world.num_image_chunks );
 }
 #endif
@@ -1532,7 +1570,8 @@ static void R_Register( void )
 	// archived variables that can change at any time
 	//
 	r_lodCurveError = ri.Cvar_Get( "r_lodCurveError", "250", CVAR_ARCHIVE_ND | CVAR_CHEAT );
-	ri.Cvar_SetDescription(r_lodCurveError, "Determines how quickly polygons are pulled out with distance.");
+    ri.Cvar_CheckRange( r_lodCurveError, "-1", "8192", CV_FLOAT );
+	ri.Cvar_SetDescription(r_lodCurveError, "Level of detail error on curved surface grids." );
 
 	r_lodbias = ri.Cvar_Get( "r_lodbias", "0", CVAR_ARCHIVE );
 	ri.Cvar_SetDescription(r_lodbias, "Level of visual detail, especially at distance. -2 Most detail, 2 Least.");
@@ -1550,7 +1589,11 @@ static void R_Register( void )
 	r_drawSun = ri.Cvar_Get( "r_drawSun", "0", CVAR_ARCHIVE_ND );
 	r_dynamiclight = ri.Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );
 #ifdef USE_PMLIGHT
+#if arm32 || arm64 // RPi4 Vulkan driver have very poor GLSL shaders performance...
+	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "0", CVAR_ARCHIVE );
+#else
 	r_dlightMode = ri.Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE );
+#endif
 	ri.Cvar_CheckRange( r_dlightMode, "0", "2", CV_INTEGER );
 	ri.Cvar_SetDescription(r_dlightMode, "1 default dynamic lights | 2 - new per-pixel dynamic lights (Default)");
 
@@ -1560,6 +1603,9 @@ static void R_Register( void )
 	r_dlightIntensity = ri.Cvar_Get( "r_dlightIntensity", "1.0", CVAR_ARCHIVE_ND );
 	ri.Cvar_CheckRange( r_dlightIntensity, "0.1", "1", CV_FLOAT );
 #endif // USE_PMLIGHT
+
+	r_dlightSaturation = ri.Cvar_Get( "r_dlightSaturation", "1", CVAR_ARCHIVE_ND );
+	ri.Cvar_CheckRange( r_dlightSaturation, "0", "1", CV_FLOAT );
 
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE_ND );
 	r_finish = ri.Cvar_Get( "r_finish", "0", CVAR_ARCHIVE_ND );
@@ -1582,6 +1628,14 @@ static void R_Register( void )
 
 	r_greyscale = ri.Cvar_Get( "r_greyscale", "0", CVAR_ARCHIVE_ND | CVAR_CHEAT );
 	ri.Cvar_CheckRange( r_greyscale, "-1", "1", CV_FLOAT );
+
+	r_dither = ri.Cvar_Get( "r_dither", "0", CVAR_ARCHIVE_ND );
+	ri.Cvar_CheckRange( r_dither, "0", "1", CV_INTEGER );
+	ri.Cvar_SetDescription(r_dither, "Set dithering mode:\n 0 - disabled\n 1 - ordered\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
+
+	r_presentBits = ri.Cvar_Get( "r_presentBits", "24", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_presentBits, "16", "30", CV_INTEGER );
+	ri.Cvar_SetDescription( r_presentBits, "Select color bits used for presentation surfaces\nRequires " S_COLOR_CYAN "\\r_fbo 1" );
 
 	//
 	// temporary variables that can change at any time
@@ -1670,8 +1724,12 @@ static void R_Register( void )
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", CVAR_LATCH );
 
 #ifdef USE_VULKAN
-	r_device = ri.Cvar_Get( "r_device", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
-	ri.Cvar_CheckRange( r_device, "0", NULL, CV_INTEGER );
+	r_device = ri.Cvar_Get( "r_device", "-1", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_device, "-2", NULL, CV_INTEGER );
+	ri.Cvar_SetDescription( r_device, "Select physical device to render:\n" \
+		" 0+ - use explicit device index\n" \
+		" -1 - first discrete GPU\n" \
+		" -2 - first integrated GPU" );
 	r_device->modified = qfalse;
 
 	r_fbo = ri.Cvar_Get( "r_fbo", "1", CVAR_ARCHIVE_ND | CVAR_LATCH );
@@ -1696,6 +1754,9 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_ext_multisample, "0", "64", CV_INTEGER );
 	ri.Cvar_SetDescription(r_ext_multisample, "Multi-sample anti-aliasing. Values: 0, 2, 4, 6, 8");
 
+	r_ext_supersample = ri.Cvar_Get( "r_ext_supersample", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
+	ri.Cvar_CheckRange( r_ext_supersample, "0", "1", CV_INTEGER );
+
 	r_ext_alpha_to_coverage = ri.Cvar_Get( "r_ext_alpha_to_coverage", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_SetDescription(r_ext_alpha_to_coverage, "Uses the alpha channel of textures as a coverage mask for anti-aliasing");
 	ri.Cvar_CheckRange( r_ext_alpha_to_coverage, "0", "1", CV_INTEGER );
@@ -1713,7 +1774,7 @@ static void R_Register( void )
 		" 2 - nearest filtering, preserve aspect ratio (black bars on sides)\n"
 		" 3 - linear filtering, stretch to full size\n"
 		" 4 - linear filtering, preserve aspect ratio (black bars on sides)\n" );
-#endif
+#endif // USE_VULKAN
 }
 
 
@@ -1792,6 +1853,10 @@ void R_Init( void ) {
 
 	R_InitImages();
 
+#ifdef USE_VULKAN
+	vk_create_pipelines();
+#endif
+
 	R_InitShaders();
 
 	R_InitSkins();
@@ -1816,7 +1881,13 @@ RE_Shutdown
 ===============
 */
 static void RE_Shutdown( refShutdownCode_t code ) {
-
+#ifdef USE_VULKAN
+	if ( code == REF_KEEP_CONTEXT ) {
+		if ( ( ri.Milliseconds() - gls.initTime ) > 48 * 3600 * 1000 ) {
+			code = REF_KEEP_WINDOW; // destroy context
+		}
+	}
+#endif
 	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", code );
 
 	ri.Cmd_RemoveCommand( "modellist" );
@@ -1845,22 +1916,32 @@ static void RE_Shutdown( refShutdownCode_t code ) {
 	// shut down platform specific OpenGL/Vulkan stuff
 	if ( code != REF_KEEP_CONTEXT ) {
 #ifdef USE_VULKAN
+		vk_shutdown();
+
+		//Com_Memset( &vk, 0, sizeof( vk ) );
+		Com_Memset( &vk_world, 0, sizeof( vk_world ) );
+		Com_Memset( &glState, 0, sizeof( glState ) );
+
 		if ( r_device->modified ) {
 			code = REF_UNLOAD_DLL;
 		}
-		vk_shutdown();
-		ri.VKimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue: qfalse );
-		Com_Memset( &vk, 0, sizeof( vk ) );
-		Com_Memset( &vk_world, 0, sizeof( vk_world ) );
+
+		if ( code != REF_KEEP_WINDOW ) {
+			ri.VKimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue : qfalse );
+			Com_Memset( &glConfig, 0, sizeof( glConfig ) );
+		}
 #else
-		ri.GLimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue: qfalse );
-
 		R_ClearSymTables();
-#endif
-
-		Com_Memset( &glConfig, 0, sizeof( glConfig ) );
 		Com_Memset( &glState, 0, sizeof( glState ) );
+
+		if ( code != REF_KEEP_WINDOW ) {
+			ri.GLimp_Shutdown( code == REF_UNLOAD_DLL ? qtrue : qfalse );
+			Com_Memset( &glConfig, 0, sizeof( glConfig ) );
+		}
+#endif
 	}
+
+	ri.FreeAll();
 
 	tr.registered = qfalse;
 }
@@ -1905,7 +1986,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	Com_Memset( &re, 0, sizeof( re ) );
 
 	if ( apiVersion != REF_API_VERSION ) {
-		ri.Printf(PRINT_ALL, "Mismatched REF_API_VERSION: expected %i, got %i\n", 
+		ri.Printf(PRINT_ALL, "Mismatched REF_API_VERSION: expected %i, got %i\n",
 			REF_API_VERSION, apiVersion );
 		return NULL;
 	}

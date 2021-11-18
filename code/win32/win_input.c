@@ -32,7 +32,6 @@ typedef struct {
 
 	qboolean	mouseActive;
 	qboolean	mouseInitialized;
-	qboolean	mouseStartupDelayed; // delay mouse init to try again when we have a window
 } WinMouseVars_t;
 
 static WinMouseVars_t s_wmv;
@@ -129,7 +128,7 @@ IN_MouseActive
 */
 qboolean IN_MouseActive( void )
 {
-	return ( in_nograb && in_nograb->integer == 0 && s_wmv.mouseActive );
+	return ( s_wmv.mouseActive && in_nograb->integer == 0 );
 }
 
 
@@ -359,7 +358,7 @@ static void IN_ActivateRawMouse( void )
 	{
 		Rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
 		Rid.usUsage = HID_USAGE_GENERIC_MOUSE;
-		Rid.dwFlags = RIDEV_NOLEGACY; // skip all WM_*BUTTON* and WM_MOUSEMOVE stuff
+		Rid.dwFlags = RIDEV_NOLEGACY /*| RIDEV_CAPTUREMOUSE*/; // skip all WM_*BUTTON* and WM_MOUSEMOVE stuff
 		Rid.hwndTarget = g_wv.hWnd;
 
 		if( !RRID( &Rid, 1, sizeof( Rid ) ) )
@@ -782,8 +781,8 @@ static void IN_DeactivateMouse( void )
 	s_wmv.mouseActive = qfalse;
 
 	IN_DeactivateDIMouse();
-	IN_DeactivateWin32Mouse();
 	IN_DeactivateRawMouse();
+	IN_DeactivateWin32Mouse();
 }
 
 
@@ -795,7 +794,6 @@ IN_StartupMouse
 static void IN_StartupMouse( void )
 {
 	s_wmv.mouseInitialized = qfalse;
-	s_wmv.mouseStartupDelayed = qfalse;
 
 	if ( in_mouse->integer == 0 ) {
 		Com_DPrintf( "Mouse control not active.\n" );
@@ -807,9 +805,7 @@ static void IN_StartupMouse( void )
 	} else {
 
 		if ( !g_wv.hWnd ) {
-			Com_DPrintf( "No window for mouse init, delaying\n" );
-			s_wmv.mouseStartupDelayed = qtrue;
-			return;
+			Com_Error( ERR_FATAL, "No window for mouse init" );
 		}
 
 		if ( IN_InitRawMouse() ) {
@@ -1222,18 +1218,6 @@ void IN_Frame( void ) {
 #endif
 
 	if ( !s_wmv.mouseInitialized ) {
-#if 0
-		if ( s_wmv.mouseStartupDelayed && g_wv.hWnd ) {
-			// some application may steal our keyboard input focus and foreground state
-			// but windows will NOT send any WM_KILLFOCUS or WM_ACTIVATE messages to us
-			// which will result in stuck mouse cursor in current foreground application
-			if ( GetForegroundWindow() == g_wv.hWnd ) {
-				Com_Printf( "Proceeding with delayed mouse init\n" );
-				IN_StartupMouse();
-				s_wmv.mouseStartupDelayed = qfalse;
-			}
-		}
-#endif
 		return;
 	}
 
@@ -1254,7 +1238,7 @@ void IN_Frame( void ) {
         return;
 	}
 
-	if ( !gw_active || in_nograb->integer ) {
+	if ( !gw_active || gw_minimized || in_nograb->integer ) {
 		IN_DeactivateMouse();
 		return;
 	}

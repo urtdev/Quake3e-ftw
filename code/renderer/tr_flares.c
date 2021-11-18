@@ -262,7 +262,7 @@ FLARE BACK END
 RB_TestFlare
 ==================
 */
-void RB_TestFlare( flare_t *f ) {
+static void RB_TestFlare( flare_t *f ) {
 	float			depth;
 	qboolean		visible;
 	float			fade;
@@ -306,7 +306,7 @@ void RB_TestFlare( flare_t *f ) {
 RB_RenderFlare
 ==================
 */
-void RB_RenderFlare( flare_t *f ) {
+static void RB_RenderFlare( flare_t *f ) {
 	float			size;
 	vec3_t			color;
 	int				iColor[3];
@@ -376,40 +376,40 @@ void RB_RenderFlare( flare_t *f ) {
 	tess.xyz[tess.numVertexes][1] = f->windowY - size;
 	tess.texCoords[0][tess.numVertexes][0] = 0;
 	tess.texCoords[0][tess.numVertexes][1] = 0;
-	tess.vertexColors[tess.numVertexes][0] = iColor[0];
-	tess.vertexColors[tess.numVertexes][1] = iColor[1];
-	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	tess.vertexColors[tess.numVertexes][3] = 255;
+	tess.vertexColors[tess.numVertexes].rgba[0] = iColor[0];
+	tess.vertexColors[tess.numVertexes].rgba[1] = iColor[1];
+	tess.vertexColors[tess.numVertexes].rgba[2] = iColor[2];
+	tess.vertexColors[tess.numVertexes].rgba[3] = 255;
 	tess.numVertexes++;
 
 	tess.xyz[tess.numVertexes][0] = f->windowX - size;
 	tess.xyz[tess.numVertexes][1] = f->windowY + size;
 	tess.texCoords[0][tess.numVertexes][0] = 0;
 	tess.texCoords[0][tess.numVertexes][1] = 1;
-	tess.vertexColors[tess.numVertexes][0] = iColor[0];
-	tess.vertexColors[tess.numVertexes][1] = iColor[1];
-	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	tess.vertexColors[tess.numVertexes][3] = 255;
+	tess.vertexColors[tess.numVertexes].rgba[0] = iColor[0];
+	tess.vertexColors[tess.numVertexes].rgba[1] = iColor[1];
+	tess.vertexColors[tess.numVertexes].rgba[2] = iColor[2];
+	tess.vertexColors[tess.numVertexes].rgba[3] = 255;
 	tess.numVertexes++;
 
 	tess.xyz[tess.numVertexes][0] = f->windowX + size;
 	tess.xyz[tess.numVertexes][1] = f->windowY + size;
 	tess.texCoords[0][tess.numVertexes][0] = 1;
 	tess.texCoords[0][tess.numVertexes][1] = 1;
-	tess.vertexColors[tess.numVertexes][0] = iColor[0];
-	tess.vertexColors[tess.numVertexes][1] = iColor[1];
-	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	tess.vertexColors[tess.numVertexes][3] = 255;
+	tess.vertexColors[tess.numVertexes].rgba[0] = iColor[0];
+	tess.vertexColors[tess.numVertexes].rgba[1] = iColor[1];
+	tess.vertexColors[tess.numVertexes].rgba[2] = iColor[2];
+	tess.vertexColors[tess.numVertexes].rgba[3] = 255;
 	tess.numVertexes++;
 
 	tess.xyz[tess.numVertexes][0] = f->windowX + size;
 	tess.xyz[tess.numVertexes][1] = f->windowY - size;
 	tess.texCoords[0][tess.numVertexes][0] = 1;
 	tess.texCoords[0][tess.numVertexes][1] = 0;
-	tess.vertexColors[tess.numVertexes][0] = iColor[0];
-	tess.vertexColors[tess.numVertexes][1] = iColor[1];
-	tess.vertexColors[tess.numVertexes][2] = iColor[2];
-	tess.vertexColors[tess.numVertexes][3] = 255;
+	tess.vertexColors[tess.numVertexes].rgba[0] = iColor[0];
+	tess.vertexColors[tess.numVertexes].rgba[1] = iColor[1];
+	tess.vertexColors[tess.numVertexes].rgba[2] = iColor[2];
+	tess.vertexColors[tess.numVertexes].rgba[3] = 255;
 	tess.numVertexes++;
 
 	tess.indexes[tess.numIndexes++] = 0;
@@ -445,6 +445,10 @@ void RB_RenderFlares (void) {
 	qboolean	draw;
 
 	if ( !r_flares->integer ) {
+		return;
+	}
+
+	if ( backEnd.isHyperspace ) {
 		return;
 	}
 

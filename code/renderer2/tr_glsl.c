@@ -1125,6 +1125,8 @@ void GLSL_InitGPUShaders(void)
 
 					if (r_parallaxMapShadows->integer)
 						Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_SHADOWS\n");
+
+					Q_strcat(extradefines, 1024, va("#define r_parallaxMapOffset %f\n", r_parallaxMapOffset->value));
 				}
 			}
 
@@ -1544,6 +1546,10 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 	if (glState.vertexAnimation)
 	{
 		shaderAttribs |= GENERICDEF_USE_VERTEX_ANIMATION;
+	}
+	else if (glState.boneAnimation)
+	{
+		shaderAttribs |= GENERICDEF_USE_BONE_ANIMATION;
 	}
 
 	if (pStage->bundle[0].numTexMods)
