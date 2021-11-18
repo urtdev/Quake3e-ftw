@@ -3612,13 +3612,6 @@ void Com_Init( char *commandLine ) {
 	Cvar_CheckRange( com_journal, "0", "2", CV_INTEGER );
     Cvar_SetDescription(com_journal, "Use a detailed journal.dat file for many events\nDefault: 0");
 
-	Com_StartupVariable( "sv_master1" );
-	Com_StartupVariable( "sv_master2" );
-	Com_StartupVariable( "sv_master3" );
-	Cvar_Get( "sv_master1", MASTER_SERVER_NAME, CVAR_INIT );
-	Cvar_Get( "sv_master2", "master.ioquake3.org", CVAR_INIT );
-	Cvar_Get( "sv_master3", "master.maverickservers.com", CVAR_INIT );
-
 	com_protocol = Cvar_Get( "protocol", XSTRING( PROTOCOL_VERSION ), 0 );
 	Cvar_CheckRange( com_protocol, "0", NULL, CV_INTEGER );
 	com_protocol->flags &= ~CVAR_USER_CREATED;

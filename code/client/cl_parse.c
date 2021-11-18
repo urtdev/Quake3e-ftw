@@ -215,7 +215,7 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	clSnapshot_t newSnap;
 	int			 deltaNum;
 	int			 oldMessageNum;
-	int			 i, packetNum;
+	int			 i, packetNum, n;
 	int          maxEntities;
 	int          commandTime;
 
@@ -469,8 +469,9 @@ static void CL_ParseSnapshot( msg_t *msg, qboolean multiview ) {
 	if ( newSnap.messageNum - oldMessageNum >= PACKET_BACKUP ) {
 		oldMessageNum = newSnap.messageNum - ( PACKET_BACKUP - 1 );
 	}
-	for ( ; oldMessageNum < newSnap.messageNum ; oldMessageNum++ ) {
-		cl.snapshots[oldMessageNum & PACKET_MASK].valid = qfalse;
+
+	for ( i = 0, n = newSnap.messageNum - oldMessageNum; i < n; i++ ) {
+		cl.snapshots[ ( oldMessageNum + i ) & PACKET_MASK ].valid = qfalse;
 	}
 
 	// copy to the current good spot

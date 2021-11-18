@@ -338,7 +338,7 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 	qcurl_easy_setopt(clc.downloadCURL, CURLOPT_PROTOCOLS, ALLOWED_PROTOCOLS);
 
 
-	clc.downloadCURLM = qcurl_multi_init();	
+	clc.downloadCURLM = qcurl_multi_init();
 	if( !clc.downloadCURLM ) {
 		qcurl_easy_cleanup( clc.downloadCURL );
 		clc.downloadCURL = NULL;
@@ -890,7 +890,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		Com_DL_Cleanup( dl );
 		return qfalse;
 	}
-//    Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
+
 	{
 		char *escapedName = dl->func.easy_escape( dl->cURL, localName, 0 );
 		if ( !escapedName )
@@ -954,7 +954,7 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 	dl->func.easy_setopt( dl->cURL, CURLOPT_USERAGENT, Q3_VERSION );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEFUNCTION, Com_DL_CallbackWrite );
 	dl->func.easy_setopt( dl->cURL, CURLOPT_WRITEDATA, dl );
-	if ( dl->headerCheck ) 
+	if ( dl->headerCheck )
 	{
 		dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERFUNCTION, Com_DL_HeaderCallback );
 		dl->func.easy_setopt( dl->cURL, CURLOPT_HEADERDATA, dl );
