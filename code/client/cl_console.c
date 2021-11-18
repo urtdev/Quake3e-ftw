@@ -230,7 +230,6 @@ static void Con_Dump_f( void )
 		// store line
 		for( x = 0; x < consoles[CONSOLE_ALL].linewidth; x++ )
 			buffer[ x ] = line[ x ] & 0xff;
-		buffer[ con.linewidth ] = '\0';
 		// terminate on ending space characters
 		for ( x = consoles[CONSOLE_ALL].linewidth - 1 ; x >= 0 ; x-- ) {
 			if ( buffer[ x ] == ' ' )

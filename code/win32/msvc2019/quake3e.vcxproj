@@ -85,7 +85,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_CURL;USE_VULKAN_API;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_CURL;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
@@ -183,7 +183,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>asWIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;USE_URT_DEMO;_WIN32;USE_SDL;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;USE_AUTH;USE_VULKAN;USE_VULKAN_API;USE_URT_DEMO;USE_FTWGL;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;CURL_STATICLIB;USE_SKIPIDLOGO;USE_CURL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
@@ -216,7 +216,7 @@
     <Link>
       <AdditionalOptions>/DYNAMICBASE %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>comctl32.lib;winmm.lib;wsock32.lib;ws2_32.lib;$(OutDir)$(ConfigurationName)-$(PlatformName)-renderer.lib;..\..\libcurl\windows\vs2017\lib64\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)quake3e.x64.exe</OutputFile>
+      <OutputFile>$(OutDir)quake3e.exe</OutputFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(IntDir)quake3e.x64.map</MapFileName>
       <StackReserveSize>4194304</StackReserveSize>
@@ -246,7 +246,6 @@
     <ClCompile Include="..\..\client\cl_ui.c" />
     <ClCompile Include="..\..\client\snd_adpcm.c" />
     <ClCompile Include="..\..\client\snd_codec.c" />
-    <ClCompile Include="..\..\client\snd_codec_ogg.c" />
     <ClCompile Include="..\..\client\snd_codec_wav.c" />
     <ClCompile Include="..\..\client\snd_dma.c" />
     <ClCompile Include="..\..\client\snd_dmahd.c" />

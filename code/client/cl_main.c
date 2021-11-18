@@ -1007,7 +1007,7 @@ static void CL_PlayDemo_f( void ) {
 				break;
 		}
 
-		if ( demo_protocols[ i ] || protocol == com_protocol->integer  )
+		if ( demo_protocols[ i ] )
 		{
 			Com_sprintf(name, sizeof(name), "demos/%s", arg);
 			FS_BypassPure();

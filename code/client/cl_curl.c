@@ -890,10 +890,10 @@ qboolean Com_DL_Begin( download_t *dl, const char *localName, const char *remote
 		Com_DL_Cleanup( dl );
 		return qfalse;
 	}
-
+//    Q_strncpyz( dl->URL, remoteURL, sizeof( dl->URL ) );
 	{
 		char *escapedName = dl->func.easy_escape( dl->cURL, localName, 0 );
-		if ( !escapedName ) 
+		if ( !escapedName )
 		{
 			Com_Printf( S_COLOR_RED "Com_DL_Begin: easy_escape() failed\n" );
 			Com_DL_Cleanup( dl );

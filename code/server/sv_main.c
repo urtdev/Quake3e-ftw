@@ -1369,7 +1369,7 @@ happen before SV_Frame is called
 void SV_Frame( int msec ) {
 	int		frameMsec;
 	int		startTime;
-	int		i;
+	int		i, n;
 
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
