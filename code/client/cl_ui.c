@@ -1204,7 +1204,6 @@ static intptr_t CL_UISystemCalls( intptr_t *args ) {
 		CopyString(VMA(1));
 		return 0;
 
-//    // TODO: ENABLED DURING MERGE, LETS SEE IF IT HELPS :W
 //	case UI_SYS_STARTPROCESS:
 //		Sys_StartProcess( VMA(1), VMA(2) );
 //		return 0;
