@@ -585,6 +585,8 @@ void Con_RunConsole( void );
 void Con_DrawConsole( void );
 void Con_PageUp( int lines );
 void Con_PageDown( int lines );
+void Con_NextTab( void );
+void Con_PrevTab( void );
 void Con_Top( void );
 void Con_Bottom( void );
 void Con_Close( void );
