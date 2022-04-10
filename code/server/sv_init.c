@@ -629,6 +629,12 @@ void SV_SpawnServer( const char *mapname, qboolean killBots ) {
 		Cbuf_ExecuteText(EXEC_NOW, "stopserverdemo all");
 #endif
 
+#ifdef USE_MV
+    // stop server-side demo (if any)
+    if (com_dedicated->integer)
+        Cbuf_ExecuteText(EXEC_NOW, "mvstoprecord");
+#endif
+
 	for ( i = 0; i < sv_maxclients->integer; i++ ) {
 		// send the new gamestate to all connected clients
 		if ( svs.clients[i].state >= CS_CONNECTED ) {
