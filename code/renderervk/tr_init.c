@@ -1060,7 +1060,9 @@ static void R_ScreenShot_f( void ) {
 	if ( ri.Cmd_Argc() == 2 && !silent ) {
 		// explicit filename
 		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.%s", ri.Cmd_Argv( 1 ), ext );
-	} else {
+	} else if ( ri.Cmd_Argc() == 3 && silent ) {
+        Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.%s", ri.Cmd_Argv( 2 ), ext );
+    } else {
 		if ( backEnd.screenshotMask & SCREENSHOT_BMP_CLIPBOARD ) {
 			// no need for filename, copy to system buffer
 			checkname[0] = '\0';
@@ -1608,8 +1610,8 @@ static void R_Register( void )
 	r_lodscale = ri.Cvar_Get( "r_lodscale", "5", CVAR_CHEAT );
 	r_norefresh = ri.Cvar_Get ("r_norefresh", "0", CVAR_CHEAT);
 	r_drawentities = ri.Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
-	r_nocull = ri.Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
-	r_novis = ri.Cvar_Get ("r_novis", "0", CVAR_CHEAT);
+	r_nocull = ri.Cvar_Get ("r_nocull", "0", CVAR_ARCHIVE | CVAR_PROTECTED);
+	r_novis = ri.Cvar_Get ("r_novis", "0", CVAR_ARCHIVE | CVAR_PROTECTED);
 	r_showcluster = ri.Cvar_Get ("r_showcluster", "0", CVAR_CHEAT);
 	r_speeds = ri.Cvar_Get ("r_speeds", "0", CVAR_CHEAT);
 	r_debugSurface = ri.Cvar_Get ("r_debugSurface", "0", CVAR_CHEAT);
@@ -1705,7 +1707,7 @@ static void R_Register( void )
 	ri.Cvar_CheckRange( r_renderWidth, "96", NULL, CV_INTEGER );
 	ri.Cvar_CheckRange( r_renderHeight, "72", NULL, CV_INTEGER );
 
-	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ROM );
+	r_renderScale = ri.Cvar_Get( "r_renderScale", "0", CVAR_ARCHIVE_ND | CVAR_LATCH );
 	ri.Cvar_CheckRange( r_renderScale, "0", "4", CV_INTEGER );
 	ri.Cvar_SetDescription( r_renderScale, "Scaling mode to be used with custom render resolution:\n"
 		" 0 - disabled\n"
