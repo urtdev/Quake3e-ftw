@@ -1917,10 +1917,23 @@ static void SV_ClientScreenshot_f( void ) {
         return;
     }
 
-    if ( Cmd_Argc() == 1 ) {
-        SV_SendServerCommand( NULL, "clientScreenshot");
-    } else if ( Cmd_Argc() == 2 ) {
-        SV_SendServerCommand( NULL, "clientScreenshot %s", Cmd_Argv(1) );
+    int i;
+    client_t	*cl;
+    const char *ticket;
+
+    for (i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++) {
+        // don't send a disconnect to a local client
+        if (cl->state >= CS_CONNECTED && cl->netchan.remoteAddress.type != NA_LOOPBACK ) {
+            // Only send to clients with tickets
+            ticket = Info_ValueForKey( cl->userinfo, "ticket" );
+            if ( strlen( ticket ) > 0 ) {
+                if ( Cmd_Argc() == 1 ) {
+                    SV_SendServerCommand( cl, "clientScreenshot");
+                } else if ( Cmd_Argc() == 2 ) {
+                    SV_SendServerCommand( cl, "clientScreenshot %s", Cmd_Argv(1) );
+                }
+            }
+        }
     }
 }
 #endif
