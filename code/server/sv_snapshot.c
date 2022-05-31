@@ -724,6 +724,11 @@ static void SV_AddEntitiesVisibleFromPoint(const vec3_t origin, clientPVS_t* pvs
 		es = svs.currFrame->ents[ e ];
 		ent = SV_GentityNum( es->number );
 
+		// Always broadcast all player entities
+		if ( ent->s.eType == ET_PLAYER ) {
+			ent->r.svFlags |= SVF_BROADCAST;
+		}
+
 		// entities can be flagged to be sent to only one client
 		if ( ent->r.svFlags & SVF_SINGLECLIENT ) {
             if ( ent->r.singleClient != pvs->clientNum ) {
@@ -769,7 +774,7 @@ static void SV_AddEntitiesVisibleFromPoint(const vec3_t origin, clientPVS_t* pvs
 
 		bitvector = clientpvs;
 
-		// check individual leafs
+		// check individual leaves
 		if ( !svEnt->numClusters ) {
 			continue;
 		}
@@ -782,7 +787,7 @@ static void SV_AddEntitiesVisibleFromPoint(const vec3_t origin, clientPVS_t* pvs
 		}
 
 		// if we haven't found it to be visible,
-		// check overflow clusters that coudln't be stored
+		// check overflow clusters that couldn't be stored
 		if ( i == svEnt->numClusters ) {
 			if ( svEnt->lastCluster ) {
 				for ( ; l <= svEnt->lastCluster ; l++ ) {
@@ -1143,7 +1148,7 @@ copies off the playerstate and areabits.
 This properly handles multiple recursive portals, but the render
 currently doesn't.
 
-For viewing through other player's eyes, clent can be something other than client->gentity
+For viewing through other player's eyes, client can be something other than client->gentity
 =============
 */
 static void SV_BuildClientSnapshot( client_t *client ) {
