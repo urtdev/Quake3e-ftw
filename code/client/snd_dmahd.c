@@ -128,7 +128,7 @@ qboolean S_ScanChannelStarts(void);
 
 // used in dmaEX mixer.
 #define							SOUND_FULLVOLUME		80
-#define							SOUND_ATTENUATE			0.0007f
+#define							SOUND_ATTENUATE			0.001f
 
 extern channel_t				s_channels[];
 extern channel_t				loop_channels[];
