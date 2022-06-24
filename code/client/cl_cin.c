@@ -1323,7 +1323,7 @@ CIN_StopCinematic
 ==================
 */
 e_status CIN_StopCinematic( int handle ) {
-	
+    return FMV_EOF;
 	if (handle < 0 || handle>= MAX_VIDEO_HANDLES || cinTable[handle].status == FMV_EOF) return FMV_EOF;
 	currentHandle = handle;
 
@@ -1354,6 +1354,7 @@ Fetch and decompress the pending frame
 */
 e_status CIN_RunCinematic( int handle )
 {
+    return FMV_EOF;
 	int start = 0;
 	int thisTime = 0;
 
@@ -1425,6 +1426,7 @@ CIN_PlayCinematic
 ==================
 */
 int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBits ) {
+    return -1;
 	unsigned short RoQID;
 	char	name[MAX_OSPATH];
 	int		i;
