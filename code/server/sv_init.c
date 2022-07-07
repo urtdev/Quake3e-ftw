@@ -882,7 +882,7 @@ void SV_Init( void )
     sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
     Cvar_SetDescription(sv_privatePassword, "Set password for private clients to login\nDefault: empty");
 
-    sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP  );
+    sv_fps = Cvar_Get ("sv_fps", "20", CVAR_TEMP | CVAR_SERVERINFO | CVAR_PROTECTED  );
     Cvar_SetDescription(sv_fps, "Set the max frames per second the server sends the client\nDefault: 20");
 
     //Cvar_CheckRange( sv_fps, "20", "125", CV_INTEGER );
