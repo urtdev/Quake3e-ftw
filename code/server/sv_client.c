@@ -1803,19 +1803,20 @@ void SV_UserinfoChanged( client_t *cl, qboolean updateUserinfo, qboolean runFilt
 	}
 
 	// snaps command
-	val = Info_ValueForKey( cl->userinfo, "snaps" );
-	if ( val[0] && !NET_IsLocalAddress( &cl->netchan.remoteAddress ) )
-		i = atoi( val );
-	else
-		i = sv_fps->integer; // sync with server
+//	val = Info_ValueForKey( cl->userinfo, "snaps" );
+//	if ( val[0] && !NET_IsLocalAddress( &cl->netchan.remoteAddress ) )
+//		i = atoi( val );
+//	else
+//		i = sv_fps->integer; // sync with server
 
 	// range check
-	if ( i < 1 )
-		i = 1;
-	else if ( i > sv_fps->integer )
-		i = sv_fps->integer;
+//	if ( i < 1 )
+//		i = 1;
+//	else if ( i > sv_fps->integer )
+//    i = sv_fps->integer;
 
-	i = 1000 / i; // from FPS to milliseconds
+    // just always send sv_fps snapshots
+	i = 1000 / sv_fps->integer; // from FPS to milliseconds
 	
 	if ( i != cl->snapshotMsec )
 	{
