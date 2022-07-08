@@ -205,6 +205,9 @@
     <ClCompile Include="..\..\client\cl_jpeg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\client\snd_dmahd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\game\bg_public.h">
@@ -292,6 +295,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\glw_win.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\client\snd_dmahd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

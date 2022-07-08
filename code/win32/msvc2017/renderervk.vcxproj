@@ -43,7 +43,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -66,6 +66,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>.\output\</OutDir>
     <IntDir>.\build\renderervk_release_x64\</IntDir>
+    <TargetName>ftw_vulkan_x86_64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\output\</OutDir>
@@ -125,7 +126,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -138,6 +139,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\qcommon\puff.c" />
+    <ClCompile Include="..\..\qcommon\q_math.c" />
+    <ClCompile Include="..\..\qcommon\q_shared.c" />
     <ClCompile Include="..\..\renderercommon\tr_noise.c" />
     <ClCompile Include="..\..\renderervk\shaders\spirv\bloom_frag.c" />
     <ClCompile Include="..\..\renderervk\shaders\spirv\blur_frag.c" />
@@ -203,6 +207,9 @@
     <ClCompile Include="..\..\renderervk\vk_vbo.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\qcommon\puff.h" />
+    <ClInclude Include="..\..\qcommon\qcommon.h" />
+    <ClInclude Include="..\..\qcommon\q_shared.h" />
     <ClInclude Include="..\..\renderervk\iqm.h" />
     <ClInclude Include="..\..\renderervk\tr_common.h" />
     <ClInclude Include="..\..\renderervk\tr_local.h" />

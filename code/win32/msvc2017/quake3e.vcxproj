@@ -33,6 +33,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <PlatformToolset>v142</PlatformToolset>
@@ -161,7 +162,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;USE_Q3KEY;USE_URT_DEMO;USE_AUTH;USE_FTWGL;USE_DEMO_REWIND;DISABLE_SNAPSHOT_THROTTLE;USE_RENDERER_DLOPEN;RENDERER_PREFIX="ftw";REND_ARCH_STRING="win";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
@@ -171,7 +172,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/DYNAMICBASE %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>comctl32.lib;winmm.lib;wsock32.lib;ws2_32.lib;$(OutDir)$(ConfigurationName)-$(PlatformName)-renderer.lib;..\..\libcurl\windows\vs2017\lib64\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;winmm.lib;wsock32.lib;ws2_32.lib;..\..\libcurl\windows\vs2017\lib64\libcurl_a.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)quake3e.x64.exe</OutputFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>$(IntDir)quake3e.x64.map</MapFileName>
@@ -205,6 +206,7 @@
     <ClCompile Include="..\..\client\snd_codec_ogg.c" />
     <ClCompile Include="..\..\client\snd_codec_wav.c" />
     <ClCompile Include="..\..\client\snd_dma.c" />
+    <ClCompile Include="..\..\client\snd_dmahd.c" />
     <ClCompile Include="..\..\client\snd_main.c" />
     <ClCompile Include="..\..\client\snd_mem.c" />
     <ClCompile Include="..\..\client\snd_mix.c" />
@@ -274,6 +276,7 @@
     <ClInclude Include="..\..\client\cl_curl.h" />
     <ClInclude Include="..\..\client\keycodes.h" />
     <ClInclude Include="..\..\client\keys.h" />
+    <ClInclude Include="..\..\client\snd_dmahd.h" />
     <ClInclude Include="..\..\client\snd_local.h" />
     <ClInclude Include="..\..\client\snd_public.h" />
     <ClInclude Include="..\..\game\bg_public.h" />

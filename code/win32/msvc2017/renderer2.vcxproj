@@ -36,7 +36,7 @@
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -65,6 +65,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>.\output\</OutDir>
     <IntDir>.\build\renderer2_release_x64\</IntDir>
+    <TargetName>ftw_opengl2_x86_64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\output\</OutDir>
@@ -165,7 +166,7 @@ cscript.exe /nologo glsl_stringify.vbs ..\..\renderer2\glsl\tonemap_vp.glsl .\bu
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;USE_RENDERER2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;USE_RENDERER2;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
@@ -297,6 +298,9 @@ cscript.exe /nologo glsl_stringify.vbs ..\..\renderer2\glsl\tonemap_vp.glsl .\bu
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\qcommon\puff.c" />
+    <ClCompile Include="..\..\qcommon\q_math.c" />
+    <ClCompile Include="..\..\qcommon\q_shared.c" />
     <ClCompile Include="..\..\renderer2\tr_animation.c" />
     <ClCompile Include="..\..\renderer2\tr_backend.c" />
     <ClCompile Include="..\..\renderer2\tr_bsp.c" />
@@ -334,8 +338,6 @@ cscript.exe /nologo glsl_stringify.vbs ..\..\renderer2\glsl\tonemap_vp.glsl .\bu
     <ClCompile Include="..\..\renderercommon\tr_image_png.c" />
     <ClCompile Include="..\..\renderercommon\tr_image_tga.c" />
     <ClCompile Include="..\..\renderercommon\tr_noise.c" />
-    <ClCompile Include="..\win_glimp.c" />
-    <ClCompile Include="..\win_qgl.c" />
     <ClCompile Include="build\dynamic\renderer2\bokeh_fp.c" />
     <ClCompile Include="build\dynamic\renderer2\bokeh_vp.c" />
     <ClCompile Include="build\dynamic\renderer2\calclevels4x_fp.c" />
@@ -370,6 +372,7 @@ cscript.exe /nologo glsl_stringify.vbs ..\..\renderer2\glsl\tonemap_vp.glsl .\bu
     <ClInclude Include="..\..\qcommon\qfiles.h" />
     <ClInclude Include="..\..\qcommon\q_shared.h" />
     <ClInclude Include="..\..\qcommon\surfaceflags.h" />
+    <ClInclude Include="..\..\qcommon\unzip.h" />
     <ClInclude Include="..\..\renderer2\tr_dsa.h" />
     <ClInclude Include="..\..\renderer2\tr_extramath.h" />
     <ClInclude Include="..\..\renderer2\tr_extratypes.h" />
