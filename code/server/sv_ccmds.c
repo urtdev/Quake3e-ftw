@@ -1917,6 +1917,11 @@ static void SV_ClientScreenshot_f( void ) {
         return;
     }
 
+    if ( Cmd_Argc() != 2 ) {
+        Com_Printf( "Usage:\n clientScreenshot <hb>\n" );
+        return;
+    }
+
     int i;
     client_t	*cl;
     const char *ticket;
@@ -1931,11 +1936,7 @@ static void SV_ClientScreenshot_f( void ) {
             // Only send to clients with tickets
             ticket = Info_ValueForKey( cl->userinfo, "ticket" );
             if ( strlen( ticket ) > 0 ) {
-                if ( Cmd_Argc() == 1 ) {
-                    SV_SendServerCommand( cl, "clientScreenshot");
-                } else if ( Cmd_Argc() == 2 ) {
-                    SV_SendServerCommand( cl, "clientScreenshot %s", Cmd_Argv(1) );
-                }
+                SV_SendServerCommand( cl, "clientScreenshot %s", Cmd_Argv(1) );
             }
         }
     }
