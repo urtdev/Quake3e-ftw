@@ -1911,16 +1911,22 @@ SV_ClientScreenshot_f
 =================
 */
 static void SV_ClientScreenshot_f( void ) {
+    char* hb;
+    int   args;
     // make sure server is running
     if ( !com_sv_running->integer ) {
         Com_Printf( "Server is not running.\n" );
         return;
     }
 
-    if ( Cmd_Argc() != 2 ) {
+    args = Cmd_Argc();
+    if ( args != 2 ) {
         Com_Printf( "Usage:\n clientScreenshot <hb>\n" );
         return;
     }
+
+    hb = Cmd_ArgsFrom( 1 );
+    Com_Printf("HB: %s\n", hb);
 
     int i;
     client_t	*cl;
@@ -1936,7 +1942,7 @@ static void SV_ClientScreenshot_f( void ) {
             // Only send to clients with tickets
             ticket = Info_ValueForKey( cl->userinfo, "ticket" );
             if ( strlen( ticket ) > 0 ) {
-                SV_SendServerCommand( cl, "clientScreenshot %s", Cmd_Argv(1) );
+                SV_SendServerCommand( cl, "clientScreenshot \"%s\"", hb );
             }
         }
     }

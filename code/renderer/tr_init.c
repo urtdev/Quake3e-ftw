@@ -1059,7 +1059,9 @@ static void R_ScreenShot_f( void ) {
 		return;
 
 	if ( !strcmp( ri.Cmd_Argv(1), "silent" ) ) {
-		silent = qtrue;
+        silent = qtrue;
+    } else if ( ri.Cmd_Argc() == 3 && silent ) {
+        Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.%s", ri.Cmd_Argv( 2 ), ext );
 	} else if ( typeMask == SCREENSHOT_BMP && !strcmp( ri.Cmd_Argv(1), "clipboard" ) ) {
 		backEnd.screenshotMask |= SCREENSHOT_BMP_CLIPBOARD;
 		silent = qtrue;

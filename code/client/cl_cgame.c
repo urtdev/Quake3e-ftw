@@ -436,7 +436,7 @@ rescan:
     if ( !strcmp( cmd, "clientScreenshot" ) ) {
         if ( Cmd_Argc() == 2 ) {
             static char filename[BIG_INFO_STRING];
-            Com_sprintf( filename, BIG_INFO_STRING, "wait ; wait ; wait ; wait ; screenshot silent %s\n",
+            Com_sprintf( filename, BIG_INFO_STRING, "wait ; wait ; wait ; wait ; screenshot \"silent\" \"%s\"\n",
                          Cmd_Argv(1));
 
             Cbuf_AddText( filename );

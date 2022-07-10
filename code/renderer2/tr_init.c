@@ -643,8 +643,10 @@ void R_ScreenShot_f (void) {
 	}
 
 	if ( ri.Cmd_Argc() == 2 && !silent ) {
-		// explicit filename
-		Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv( 1 ) );
+        // explicit filename
+        Com_sprintf(checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv(1));
+    } else if ( ri.Cmd_Argc() == 3 && silent ) {
+        Com_sprintf( checkname, MAX_OSPATH, "screenshots/%s.tga", ri.Cmd_Argv( 2 ) );
 	} else {
 		// scan for a free filename
 
