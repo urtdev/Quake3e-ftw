@@ -296,6 +296,8 @@ static	cvar_t		*fs_homepath;
 
 static	cvar_t		*fs_steampath;
 
+static  cvar_t      *fs_clientpath;
+
 static	cvar_t		*fs_basepath;
 static	cvar_t		*fs_basegame;
 static	cvar_t		*fs_copyfiles;
@@ -4713,6 +4715,7 @@ static void FS_Startup( void ) {
     fs_steampath = Cvar_Get( "fs_steampath", Sys_SteamPath(), CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE );
     Cvar_SetDescription(fs_steampath, "The search path for Steam data when the engine is downloaded through Steam");
 
+    fs_clientpath = Cvar_Get("fs_clientpath", "", CVAR_INIT | CVAR_PROTECTED | CVAR_PRIVATE);
 
 #ifndef USE_HANDLE_CACHE
 	fs_locked = Cvar_Get( "fs_locked", "0", CVAR_INIT );
@@ -4763,6 +4766,10 @@ static void FS_Startup( void ) {
         FS_AddGameDirectory(va("%s/q3ut4", fs_basepath->string), "download");
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
 	}
+
+    if ( fs_clientpath->string[0] ) {
+        FS_AddGameDirectory( fs_clientpath->string, fs_clientpath->string );
+    }
 
 	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 	// NOTE: same filtering below for mods and basegame
@@ -5802,12 +5809,15 @@ void *FS_LoadLibrary( const char *name )
 	libHandle = Sys_LoadLibrary( fn );
 #endif
 
+    Com_Printf("PWD: %s\n", Sys_Pwd());
+
 	while ( !libHandle && sp ) {
 		while ( sp && ( sp->policy != DIR_STATIC || !sp->dir ) ) {
 			sp = sp->next;
 		}
 		if ( sp ) {
 			fn = FS_BuildOSPath( sp->dir->path, name, NULL );
+            Com_Printf("THE PATH: %s\n", fn);
 			libHandle = Sys_LoadLibrary( fn );
 			sp = sp->next;
 		}
