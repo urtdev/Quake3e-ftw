@@ -4014,7 +4014,7 @@ static void CL_InitGLimp_Cvars( void )
 
 
     r_displayRefresh = Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
-	Cvar_CheckRange( r_displayRefresh, "0", "250", CV_INTEGER );
+	Cvar_CheckRange( r_displayRefresh, "0", "390", CV_INTEGER );
     Cvar_SetDescription( r_displayRefresh, "Set the display refresh rate - not used\nDefault: 0 (set by display)" );
 
 
