@@ -5805,8 +5805,6 @@ void *FS_LoadLibrary( const char *name )
 	libHandle = Sys_LoadLibrary( fn );
 #endif
 
-    Com_Printf("PWD: %s\n", Sys_Pwd());
-
     if (fs_clientpath->string[0]) {
         fn = FS_BuildOSPath( fs_clientpath->string, name, NULL );
         libHandle = Sys_LoadLibrary( fn );
@@ -5821,7 +5819,6 @@ void *FS_LoadLibrary( const char *name )
 		}
 		if ( sp ) {
 			fn = FS_BuildOSPath( sp->dir->path, name, NULL );
-            Com_Printf("THE PATH: %s\n", fn);
 			libHandle = Sys_LoadLibrary( fn );
 			sp = sp->next;
 		}
