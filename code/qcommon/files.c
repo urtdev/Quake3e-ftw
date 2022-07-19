@@ -4767,10 +4767,6 @@ static void FS_Startup( void ) {
 		FS_AddGameDirectory( fs_basepath->string, fs_basegame->string );
 	}
 
-    if ( fs_clientpath->string[0] ) {
-        FS_AddGameDirectory( fs_clientpath->string, fs_clientpath->string );
-    }
-
 	// fs_homepath is somewhat particular to *nix systems, only add if relevant
 	// NOTE: same filtering below for mods and basegame
 	if ( fs_homepath->string[0] && Q_stricmp( fs_homepath->string, fs_basepath->string ) ) {
@@ -5810,6 +5806,14 @@ void *FS_LoadLibrary( const char *name )
 #endif
 
     Com_Printf("PWD: %s\n", Sys_Pwd());
+
+    if (fs_clientpath->string[0]) {
+        fn = FS_BuildOSPath( fs_clientpath->string, name, NULL );
+        libHandle = Sys_LoadLibrary( fn );
+        if (libHandle) {
+            return libHandle;
+        }
+    }
 
 	while ( !libHandle && sp ) {
 		while ( sp && ( sp->policy != DIR_STATIC || !sp->dir ) ) {
