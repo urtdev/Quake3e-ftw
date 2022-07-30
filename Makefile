@@ -19,9 +19,9 @@ ifeq ($(COMPILE_PLATFORM),mingw32)
 endif
 
 BUILD_CLIENT     = 1 
-BUILD_SERVER     = 1
+BUILD_SERVER     = 0
 
-USE_SDL            = 0
+USE_SDL            = 1
 USE_CURL           = 1
 USE_LOCAL_HEADERS  = 0
 USE_VULKAN         = 0
@@ -37,7 +37,7 @@ USE_MV_ZCMD        = 1
 
 USE_RENDERER_DLOPEN = 1
 
-CNAME            = ftwgl-20210128
+CNAME            = ftw
 DNAME            = quake3e.ded
 
 RENDERER_PREFIX  = $(CNAME)
