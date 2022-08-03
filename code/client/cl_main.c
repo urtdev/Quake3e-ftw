@@ -3990,12 +3990,11 @@ static void CL_ModeList_f( void )
 
 #ifdef USE_RENDERER_DLOPEN
 static qboolean isValidRenderer( const char *s ) {
-	while ( *s ) {
-		if ( !((*s >= 'a' && *s <= 'z') || (*s >= 'A' && *s <= 'Z') ))
-			return qfalse;
-		++s;
-	}
-	return qtrue;
+	if (strcmp(s, "opengl") || strcmp(s, "opengl2") || strcmp(s, "vulkan")) {
+	    return qtrue;
+    } else {
+        return qfalse;
+    }
 }
 #endif
 
@@ -4070,7 +4069,7 @@ static void CL_InitGLimp_Cvars( void )
 	if ( !isValidRenderer( cl_renderer->string ) ) {
 		Cvar_ForceReset( "cl_renderer" );
 	}
-    Cvar_SetDescription(cl_renderer, "Set the name of the dynamically linked renderer\nDefault: opengl");
+    Cvar_SetDescription(cl_renderer, "Set the name of the dynamically linked renderer\nDefault: opengl\nOther options: vulkan, opengl2");
 #endif
 }
 
@@ -4152,7 +4151,7 @@ void CL_Init( void ) {
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
     Cvar_SetDescription(rconAddress, "Set the server address for rcon commands, rcon can be used without being connected to a game\nDefault: empty");
 
-    cl_lastServerAddress = Cvar_Get("cl_lastServerAddress", "", CVAR_ROM | CVAR_PROTECTED );
+    cl_lastServerAddress = Cvar_Get("cl_lastServerAddress", "", CVAR_ROM | CVAR_ARCHIVE );
 	Cvar_SetDescription(cl_lastServerAddress, "Last server you were connected to.");
 
 	cl_allowDownload = Cvar_Get( "cl_allowDownload", "1", CVAR_ROM | CVAR_PROTECTED );
