@@ -162,7 +162,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\libcurl\windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;_WIN32_WINNT=0x0601;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;USE_Q3KEY;USE_URT_DEMO;USE_AUTH;USE_FTWGL;USE_DEMO_REWIND;DISABLE_SNAPSHOT_THROTTLE;USE_RENDERER_DLOPEN;RENDERER_PREFIX="ftw";REND_ARCH_STRING="win";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_WIN32_WINNT=0x0601;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;USE_SKIPIDLOGO;USE_CURL;CURL_STATICLIB;USE_VULKAN_API;USE_Q3KEY;USE_URT_DEMO;USE_AUTH;USE_FTWGL;USE_DEMO_REWIND;USE_SDL;DISABLE_SNAPSHOT_THROTTLE;USE_RENDERER_DLOPEN;RENDERER_PREFIX="ftw";REND_ARCH_STRING="win";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
