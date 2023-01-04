@@ -1162,11 +1162,12 @@ void IN_Init( void ) {
 
 	// mouse variables
 	in_mouse = Cvar_Get ("in_mouse", "1", CVAR_ARCHIVE |CVAR_LATCH );
-	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
+	Cvar_CheckRange( in_mouse, "-1", "2", CV_INTEGER );
 	Cvar_SetDescription( in_mouse,
 		"Mouse data input source:\n" \
 		"  0 - disable mouse input\n" \
 		"  1 - di/raw mouse\n" \
+        "  2 - urt di/raw mouse\n"
 		" -1 - win32 mouse" );
 		
 	in_nograb = Cvar_Get( "in_nograb", "0", 0 );

@@ -1268,7 +1268,7 @@ void IN_Init( void )
 
 	// mouse variables
 	in_mouse = Cvar_Get( "in_mouse", "1", CVAR_ARCHIVE );
-	Cvar_CheckRange( in_mouse, "-1", "1", CV_INTEGER );
+	Cvar_CheckRange( in_mouse, "-1", "2", CV_INTEGER );
 
 #ifdef USE_JOYSTICK
 	in_joystick = Cvar_Get( "in_joystick", "0", CVAR_ARCHIVE|CVAR_LATCH );
