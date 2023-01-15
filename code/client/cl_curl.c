@@ -334,6 +334,7 @@ void CL_cURL_BeginDownload( const char *localName, const char *remoteURL )
 	qcurl_easy_setopt(clc.downloadCURL, CURLOPT_FOLLOWLOCATION, 1);
 	qcurl_easy_setopt(clc.downloadCURL, CURLOPT_MAXREDIRS, 5);
 	qcurl_easy_setopt(clc.downloadCURL, CURLOPT_PROTOCOLS, ALLOWED_PROTOCOLS);
+	qcurl_easy_setopt(clc.downloadCURL, CURLOPT_BUFFERSIZE, CURL_MAX_READ_SIZE);
 
 
 	clc.downloadCURLM = qcurl_multi_init();	
