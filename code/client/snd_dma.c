@@ -55,7 +55,7 @@ byte			*dma_buffer2;
 // only begin attenuating sound volumes when outside the FULLVOLUME range
 #define		SOUND_FULLVOLUME	80
 
-#define		SOUND_ATTENUATE		0.0009f
+#define		SOUND_ATTENUATE		0.0008f
 
 #define		MASTER_VOL			127
 #define		SPHERE_VOL			90
