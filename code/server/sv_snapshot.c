@@ -725,9 +725,9 @@ static void SV_AddEntitiesVisibleFromPoint(const vec3_t origin, clientPVS_t* pvs
 		ent = SV_GentityNum( es->number );
 
 		// Always broadcast all player entities
-		if ( ent->s.eType == ET_PLAYER ) {
-			ent->r.svFlags |= SVF_BROADCAST;
-		}
+//		if ( ent->s.eType == ET_PLAYER ) {
+//			ent->r.svFlags |= SVF_BROADCAST;
+//		}
 
 		// entities can be flagged to be sent to only one client
 		if ( ent->r.svFlags & SVF_SINGLECLIENT ) {
