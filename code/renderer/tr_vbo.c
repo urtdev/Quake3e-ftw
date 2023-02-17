@@ -1493,7 +1493,10 @@ void RB_StageIteratorVBO( void )
 	shader = input->shader;
 
 	// set face culling appropriately
-	GL_Cull( shader->cullType );
+    if (backEnd.currentEntity->e.renderfx & RF_SWAPCULL)
+        GL_Cull(2 - input->shader->cullType);
+    else
+        GL_Cull(input->shader->cullType);
 
 	// set polygon offset if necessary
 	if ( shader->polygonOffset )
