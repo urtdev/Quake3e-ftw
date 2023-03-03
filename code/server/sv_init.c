@@ -928,19 +928,24 @@ void SV_Init( void )
 
     sv_strictAuth = Cvar_Get ("sv_strictAuth", "1", CVAR_ARCHIVE );
 
+	sv_noRecoil = Cvar_Get("sv_noRecoil", "0", CVAR_ARCHIVE_ND);
+	Cvar_SetDescription(sv_noRecoil, "Disables recoil and movement inaccuracy.\nDefault: 0");
+	sv_noAmmo = Cvar_Get("sv_noAmmo", "0", CVAR_ARCHIVE_ND);
+	Cvar_SetDescription(sv_noAmmo, "Enables unlimited ammo.\nDefault: 0");
+
 #ifdef USE_SERVER_DEMO
-    sv_demonotice = Cvar_Get ("sv_demonotice", "", CVAR_ARCHIVE);
+	sv_demonotice = Cvar_Get ("sv_demonotice", "", CVAR_ARCHIVE);
 	sv_demofolder = Cvar_Get ("sv_demofolder", "serverdemos", CVAR_ARCHIVE );
 #endif
 
 #ifdef USE_AUTH
-    sv_authServerIP = Cvar_Get("sv_authServerIP", "", CVAR_TEMP | CVAR_ROM);
+	sv_authServerIP = Cvar_Get("sv_authServerIP", "", CVAR_TEMP | CVAR_ROM);
 	sv_auth_engine = Cvar_Get("sv_auth_engine", "1", CVAR_ROM);
 #endif
 
 #ifdef USE_BANS
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
-    Cvar_SetDescription("Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
+	Cvar_SetDescription("Set the file to store a cache of all the player bans\nDefault: serverbans.dat");
 #endif
 
 	sv_levelTimeReset = Cvar_Get( "sv_levelTimeReset", "0", CVAR_ARCHIVE_ND );

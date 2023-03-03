@@ -66,18 +66,21 @@ cvar_t	*sv_referencedPakNames;
 cvar_t	*sv_serverid;
 cvar_t	*sv_minRate;
 cvar_t	*sv_maxRate;
-cvar_t  *sv_minPing;
-cvar_t  *sv_maxPing;
+cvar_t	*sv_minPing;
+cvar_t	*sv_maxPing;
 cvar_t	*sv_dlRate;
 cvar_t	*sv_gametype;
 cvar_t	*sv_pure;
 cvar_t	*sv_floodProtect;
 cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)
 
-cvar_t  *sv_strictAuth;
+cvar_t	*sv_strictAuth;
 
-cvar_t *sv_levelTimeReset;
-cvar_t *sv_filter;
+cvar_t	*sv_noRecoil;			// 1 = disables recoil and movement inaccuracy
+cvar_t	*sv_noAmmo;				// 1 = unlimited ammo
+
+cvar_t	*sv_levelTimeReset;
+cvar_t	*sv_filter;
 
 #ifdef USE_AUTH
 cvar_t* sv_authServerIP;
@@ -92,7 +95,7 @@ int serverBansCount = 0;
 
 #ifdef USE_SERVER_DEMO
 cvar_t	*sv_demonotice;				// notice to print to a client being recorded server-side
-cvar_t 	*sv_demofolder;				//@Barbatos - the name of the folder that contains server-side demos
+cvar_t	*sv_demofolder;				//@Barbatos - the name of the folder that contains server-side demos
 #endif
 
 /*
@@ -1367,7 +1370,7 @@ happen before SV_Frame is called
 void SV_Frame( int msec ) {
 	int		frameMsec;
 	int		startTime;
-	int		i, n;
+	int		i, j, n;
 
 	if ( Cvar_CheckGroup( CVG_SERVER ) )
 		SV_TrackCvarChanges(); // update rate settings, etc.
@@ -1480,6 +1483,26 @@ void SV_Frame( int msec ) {
 	SV_CalcPings();
 
 	if (com_dedicated->integer) SV_BotFrame (sv.time);
+
+
+	if (sv_noRecoil->integer) {
+		ps->stats[3] = 0;
+		ps->stats[4] = 0;
+		ps->stats[5] = 0;
+		ps->stats[11] = 0;
+	}
+
+	if (sv_noAmmo->integer) {
+		if (cl->lastUsercmd.buttons & BUTTON_ATTACK) {
+			for (j = 0; j < MAX_WEAPONS; j++) {
+				ps->powerups[j] = cl->powerups[j];
+			}
+
+		} else {
+			for (j = 0; j < MAX_WEAPONS; j++) {
+				cl->powerups[j] = ps->powerups[j];
+			}
+	}
 
 #ifdef USE_MV
     svs.emptyFrame = qtrue;

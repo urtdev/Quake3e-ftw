@@ -245,6 +245,8 @@ typedef struct client_s {
 	char			tld[3]; // "XX\0"
 	const char		*country;
 
+	int powerups[MAX_WEAPONS];
+
 #ifdef USE_AUTH
     char auth[MAX_NAME_LENGTH];
 #endif
@@ -388,12 +390,14 @@ extern	cvar_t	*sv_floodProtect;
 extern	cvar_t	*sv_lanForceRate;
 extern	cvar_t	*sv_strictAuth;
 
-extern	cvar_t *sv_levelTimeReset;
-extern	cvar_t *sv_filter;
+extern	cvar_t	*sv_levelTimeReset;
+extern	cvar_t	*sv_filter;
+extern	cvar_t	*sv_noRecoil;
+extern	cvar_t	*sv_noAmmo;
 
 #ifdef USE_AUTH
 extern	cvar_t	*sv_authServerIP;
-extern  cvar_t  *sv_auth_engine;
+extern	cvar_t	*sv_auth_engine;
 #endif
 
 #ifdef USE_BANS
@@ -404,7 +408,7 @@ extern	int serverBansCount;
 
 #ifdef USE_SERVER_DEMO
 extern	cvar_t	*sv_demonotice;
-extern  cvar_t  *sv_demofolder;
+extern	cvar_t	*sv_demofolder;
 #endif
 
 //===========================================================
