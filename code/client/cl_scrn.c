@@ -30,6 +30,10 @@ cvar_t		*cl_debuggraph;
 cvar_t		*cl_graphheight;
 cvar_t		*cl_graphscale;
 cvar_t		*cl_graphshift;
+cvar_t		*cl_drawstamina_x;
+cvar_t		*cl_drawstamina_y;
+cvar_t		*cl_drawstamina;
+cvar_t		*cl_speedoSize;
 
 /*
 ================
@@ -602,6 +606,33 @@ void SCR_DrawDebugGraph (void)
 	}
 }
 
+#define MAX_STAMINA 30000
+#define LOW_STAMINA 1500
+
+/*
+==============
+SCR_DrawStamina
+==============
+*/
+static void SCR_DrawStamina( void )
+{
+	int stamina;
+	unsigned char color;
+	char *string;
+	playerState_t *ps;
+
+	if( !cl_drawstamina->integer )
+		return;
+
+	ps = &cl.snap.ps;
+
+	stamina = cl_drawstamina->integer > 1 ? (ps->stats[0] / 100) : ((ps->stats[0] * 100) / MAX_STAMINA);
+	color = ps->stats[0] < LOW_STAMINA ? COLOR_RED : COLOR_GREEN;
+
+	string = va( "%d", stamina );
+
+	SCR_DrawStringExt( cl_drawstamina_x->integer, cl_drawstamina_y->integer, cl_speedoSize->integer, string, g_color_table[ ColorIndex( color ) ], qtrue, qfalse );
+}
 //=============================================================================
 
 /*
@@ -624,6 +655,18 @@ void SCR_Init( void ) {
 
     cl_graphshift = Cvar_Get ("graphshift", "0", CVAR_CHEAT);
     Cvar_SetDescription(cl_graphshift, "Set the shift of the graph\nDefault: 0");
+
+		cl_drawstamina = Cvar_Get ("cl_drawstamina", "0", CVAR_ARCHIVE);
+    Cvar_SetDescription(cl_drawstamina, "Draw Numerical Stamina Meter?\nDefault: 0");
+
+		cl_drawstamina_x = Cvar_Get ("cl_drawstamina_x", "0", CVAR_ARCHIVE);
+    Cvar_SetDescription(cl_drawstamina_x, "X Offset of Numerical Stamina Meter\nDefault: 0");
+
+		cl_drawstamina_y = Cvar_Get ("cl_drawstamina_y", "0", CVAR_ARCHIVE);
+    Cvar_SetDescription(cl_drawstamina_y, "Y Offset of Numerical Stamina Meter\nDefault: 0");
+
+		cl_speedoSize = Cvar_Get ("cl_speedoSize", "64", CVAR_ARCHIVE);
+    Cvar_SetDescription(cl_speedoSize, "Size of Numerical Stamina Meter\nDefault: 64");
 
     scr_initialized = qtrue;
 }
@@ -707,6 +750,7 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 #ifdef USE_VOIP
 			SCR_DrawVoipMeter();
 #endif
+			SCR_DrawStamina();
 			break;
 		}
 	}
